@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Copyright 2016 LasLabs Inc.
+    License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
+-->
+
+<odoo>
+
+	<template id="web.webclient_bootstrap" name="Webclient Mobile">
+		<t t-call="web.layout">
+			<t t-set="head">
+				
+				<meta charset="utf-8" />
+				<meta http-equiv="cleartype" content="on" />
+				<meta name="MobileOptimized" content="320" />
+				<meta name="HandheldFriendly" content="True" />
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+					
+				<t t-call-assets="web.assets_common"/>
+				<script type="text/javascript">
+					odoo.define('web.csrf', function (require) {
+						var token = "<t t-esc="request.csrf_token(None)"/>";
+						require('web.core').csrf_token = token;
+						require('qweb').default_dict.csrf_token = token;
+					});
+					odoo.db_info = <t t-raw="db_info"/>;
+				</script>
+				<t t-call-assets="web.assets_backend"/>
+				&lt;!--[if lte IE 9]&gt; <link rel="stylesheet" href="/web/static/src/css/ie.css"/> &lt;![endif]--&gt;
+				<script type="text/javascript">
+					$(function() {
+						<t t-if="init">
+							<t t-raw="init"/>
+						</t>
+						<t t-if="not init">
+							odoo.define('web.web_client', function (require) {
+								var WebClient = require('web.WebClient');
+								var web_client = new WebClient();
+								web_client.setElement($(document.body));
+								web_client.start();
+								return web_client;
+							});
+						</t>
+					});
+				</script>
+
+			</t>
+			
+			<nav id="odooAppDrawer" class="css-app-drawer">
+				<t t-call="web.menu" />
+			</nav>
+			
+			<main id="odooMenuBar" style="height:100%; width: 100%;">
+				
+				<header>
+				
+					<nav class="navbar navbar-default css-main-nav"
+						 role="navigation"
+						 groups="base.group_user,base.group_portal"
+						 >
+						<div class="container-fluid">
+							<div class="navbar-header">
+								<button type="button"
+										class="navbar-toggle collapsed"
+										data-toggle="collapse"
+										data-target="#odooMenuBarNav"
+										aria-expanded="false"
+										>
+									<span class="sr-only">Toggle Navigation</span>
+									<span class="icon-bar"></span>
+									<span class="icon-bar"></span>
+									<span class="icon-bar"></span>
+								</button>
+								
+							</div>
+							<div class="collapse navbar-collapse" id="odooMenuBarNav">
+								<div class="nav navbar-nav oe_secondary_menus_container">
+									<t t-call="web.menu_secondary" />
+								</div>
+								<div class="nav navbar-nav navbar-right">
+									<ul class="nav navbar-nav navbar-right oe_user_menu_placeholder"
+										style="display: none;"
+										/>
+									<ul class="nav navbar-nav navbar-right oe_systray"
+										style="display: none;"
+										/>
+								</div>
+							</div>
+						</div>
+					</nav>
+					
+				</header>
+	
+				<div class="openerp openerp_webclient_container oe_webclient">
+					<div class="oe_application"/>
+				</div>
+					
+			</main>
+			
+		</t>
+	</template>
+
+	<template id="web.menu_secondary">
+		
+		<t t-foreach="menu_data['children']" t-as="menu">
+			<ul style="display: none" class="oe_secondary_menu nav navbar-nav" t-att-data-menu-parent="menu['id']">
+				<li>
+					<a class="js_toggle_app_drawer text-center" href="#">
+						Apps
+					</a>
+				</li>
+				<t t-call="web.menu_secondary_submenu" />
+			</ul>
+		</t>
+	
+	</template>
+
+	<template id="web.menu_secondary_submenu">
+		<t t-foreach="menu['children']" t-as="menu">
+			<t t-if="menu['children']">
+				<li t-attf-class="{{ 'dropdown-submenu' if submenu else '' }}">
+					<t t-if="submenu">
+						<a href="#" class="dropdown-toggle">
+							<t t-esc="menu['name']" />
+						 </a>
+					</t>
+					<t t-if="not submenu">
+						<a href="#"
+						   class="dropdown-toggle"
+						   data-toggle="dropdown"
+						   role="button"
+						   aria-haspopup="true"
+						   aria-expanded="false"
+						   >
+							<t t-esc="menu['name']" />
+							<span class="caret" />
+						 </a>
+					</t>
+					<ul t-if="menu['children']"
+						t-attf-class="dropdown-menu oe_secondary_submenu"
+						>
+						<t t-call="web.menu_secondary_submenu">
+							<t t-set="submenu" t-value="True" />
+						</t>
+					</ul>
+				</li>
+			</t>
+			<t t-if="not menu['children']">
+				<li>
+					<t t-call="web.menu_link" />
+				</li>
+			</t>
+		</t>
+	</template>
+
+	<template id="web.menu_link">
+		
+		<t t-set="debug_param" t-value="'?&amp;debug=' if debug else ''"/>
+		
+		<a t-attf-href="/web{{ debug_param }}#menu_id={{ menu['id'] }}&amp;action={{ menu['action'] and menu['action'].split(',')[1] or '' }}"
+		   t-att-class="'oe_menu_toggler' if menu.get('children') else 'oe_menu_leaf'"
+		   t-att-data-menu="menu['id']"
+		   t-att-data-action-model="menu['action'] and menu['action'].split(',')[0] or ''"
+		   t-att-data-action-id="menu['action'] and menu['action'].split(',')[1] or ''"
+		   >
+			<t t-if="display_images">
+				<img t-attf-src="/web/image/ir.ui.menu/{{ menu['id'] }}/web_icon_data"
+					 class="css-app-drawer-icon img-rounded"
+					 t-att-alt="menu['name']"
+					 t-att-title="menu['name']"
+					 />
+			</t>
+			<t t-if="not display_images">
+				<span class="oe_menu_text">
+					<t t-esc="menu['name']"/>
+				</span>
+			</t>
+		</a>
+		
+	</template>
+
+	<template id="web.menu">
+
+		<ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
+			<li t-foreach="menu_data['children']" t-as="menu">
+				<t t-call="web.menu_link">
+					<t t-set="display_images" t-value="1" />
+				</t>
+			</li>
+			<li id="menu_more_container" class="dropdown" style="display: none;">
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">More <b class="caret"></b></a>
+				<ul id="menu_more" class="dropdown-menu"></ul>
+			</li>
+		</ul>
+		
+	</template>
+
+</odoo>
