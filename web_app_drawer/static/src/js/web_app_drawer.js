@@ -28,11 +28,11 @@ odoo.define('web_app_drawer', function(require) {
         var slideout = new Slideout({
             'panel': document.getElementById('odooMenuBar'),
             'menu': document.getElementById('odooAppDrawer'),
-            'padding': 500,
+            'padding': 350,
             'tolerance': 70,
         });
         
-        $('.js_toggle_app_drawer').click(function() {
+        $('.js-toggle-app-drawer').click(function() {
             slideout.toggle();
             var $clickZones = $('.openerp_webclient_container, ' +
                                 'a.oe_menu_leaf, ' +

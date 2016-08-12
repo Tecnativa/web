@@ -61,21 +61,33 @@
 						 groups="base.group_user,base.group_portal"
 						 >
 						<div class="container-fluid">
+							
+							<a class="pull-left btn js-toggle-app-drawer navbar-toggle collapsed" href="#">
+								<img src="/web_app_drawer/static/description/icon.png" class="css-app-drawer-toggle-mobile" />
+							</a>
+							
+							<a class="pull-left js-toggle-app-drawer navbar-collapse collapse" href="#">
+								<img src="/web_app_drawer/static/description/icon.png" class="css-app-drawer-toggle-desktop" />
+							</a>
+							
 							<div class="navbar-header">
+								
 								<button type="button"
-										class="navbar-toggle collapsed"
+										class="navbar-toggle collapsed pull-right"
 										data-toggle="collapse"
 										data-target="#odooMenuBarNav"
 										aria-expanded="false"
 										>
 									<span class="sr-only">Toggle Navigation</span>
-									<span class="icon-bar"></span>
-									<span class="icon-bar"></span>
-									<span class="icon-bar"></span>
+									<span class="icon-bar" />
+									<span class="icon-bar" />
+									<span class="icon-bar" />
+									<span class="icon-bar" />
 								</button>
 								
 							</div>
-							<div class="collapse navbar-collapse" id="odooMenuBarNav">
+							
+							<div class="collapse navbar-collapse text-center" id="odooMenuBarNav">
 								<div class="nav navbar-nav oe_secondary_menus_container">
 									<t t-call="web.menu_secondary" />
 								</div>
@@ -106,11 +118,6 @@
 		
 		<t t-foreach="menu_data['children']" t-as="menu">
 			<ul style="display: none" class="oe_secondary_menu nav navbar-nav" t-att-data-menu-parent="menu['id']">
-				<li>
-					<a class="js_toggle_app_drawer text-center" href="#">
-						Apps
-					</a>
-				</li>
 				<t t-call="web.menu_secondary_submenu" />
 			</ul>
 		</t>

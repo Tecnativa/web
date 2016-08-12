@@ -9,70 +9,83 @@ body {
 /* Menu Bar */
 .css-main-nav {
     margin-bottom: 0 !important;
-    min-height: 28px !important;
+    min-height: 2em !important;
 }
 
 .css-main-nav ul.nav > li > a {
-    padding: 4px 7px 4px 7px !important; 
-    height: 28px;
+    padding: 0.625em !important; 
+    height: 2.5em;
 }
 
 .css-main-nav div.progress {
-    margin-top: 6px;
+    margin-top: .625em;
+}
+
+.css-app-drawer-toggle-desktop {
+    max-height: 2.2em;
+}
+
+.css-app-drawer-toggle-mobile {
+    max-height: 3em;
+}
+
+.js-toggle-app-drawer {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
 }
 
 .oe_topbar_avatar {
-    display: none !important;
+    display: none;
 }
 
 /* Dropdown Submenu */
 
 .dropdown-submenu {
-    position:relative;
+    position: relative;
 }
 
 .dropdown-submenu > .dropdown-menu {
-    top:0;
-    left:100%;
-    margin-top:-6px;
-    margin-left:-1px;
-    -webkit-border-radius:0 6px 6px 6px;
-    -moz-border-radius:0 6px 6px 6px;
-    border-radius:0 6px 6px 6px;
+    top: 0;
+    left: 100%;
+    margin-top: -0.375em;
+    margin-left: -0.0625em;
+    -webkit-border-radius: 0 0.375em 0.375em 0.375em;
+    -moz-border-radius: 0 0.375em 0.375em 0.375em;
+    border-radius: 0 0.375em 0.375em 0.375em;
 }
 
 .dropdown-submenu:hover > .dropdown-menu {
-    display:block;
+    display: block;
 }
 
 .dropdown-submenu > a:after {
-    display:block;
-    content:" ";
-    float:right;
-    width:0;
-    height:0;
-    border-color:transparent;
-    border-style:solid;
-    border-width:5px 0 5px 5px;
-    border-left-color:#cccccc;
-    margin-top:5px;
-    margin-right:-10px;
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 0.3125em 0 0.3125em 0.3125em;
+    border-left-color: #cccccc;
+    margin-top: 0.3125em;
+    margin-right: -0.625em;
 }
 
 .dropdown-submenu:hover > a:after {
-    border-left-color:#ffffff;
+    border-left-color: #ffffff;
 }
 
 .dropdown-submenu.pull-left {
-    float:none;
+    float: none;
 }
 
 .dropdown-submenu.pull-left > .dropdown-menu {
-    left:-100%;
-    margin-left:10px;
-    -webkit-border-radius:6px 0 6px 6px;
-    -moz-border-radius:6px 0 6px 6px;
-    border-radius:6px 0 6px 6px;
+    left: -100%;
+    margin-left: 0.625em;
+    -webkit-border-radius: 0.375em 0 0.375em 0.375em;
+    -moz-border-radius: 0.375em 0 0.375em 0.375em;
+    border-radius: 0.375em 0 0.375em 0.375em;
 }
 
 /* App Drawer */
@@ -83,8 +96,8 @@ body {
 }
 
 .css-app-drawer-icon {
-    height: 90px;
-    width: 90px;
+    height: 5.625em;
+    width: 5.625em;
 }
 
 .slideout-menu {
@@ -94,7 +107,7 @@ body {
     bottom: 0;
     right: 0;
     z-index: 0;
-    width: 500px;
+    width: 350px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     display: none;
