@@ -48,67 +48,63 @@
 
 			</t>
 			
-			<nav id="odooAppDrawer" class="css-app-drawer">
-				<t t-call="web.menu" />
-			</nav>
-			
-			<main id="odooMenuBar" style="height:100%; width: 100%;">
+			<t t-set="body_classname" t-value="'drawer drawer--left'" />
 				
-				<header>
+			<header role="banner">
+				<button type="button" class="css-app-drawer-toggle drawer-toggle drawer-hamburger">
+					<span class="sr-only">Toggle Navigation</span>
+					<span class="drawer-hamburger-icon"></span>
+				</button>
+				<nav id="odooAppDrawer" class="css-app-drawer-nav drawer-nav" role="navigation">
+					<t t-call="web.menu" />
+				</nav>
+			</header>
 				
-					<nav class="navbar navbar-default css-main-nav"
-						 role="navigation"
-						 groups="base.group_user,base.group_portal"
-						 >
-						<div class="container-fluid">
+			<main role="main">
+				
+				<nav class="navbar navbar-default css-main-nav"
+					 role="navigation"
+					 groups="base.group_user,base.group_portal"
+					 >
+					<div class="container-fluid">
+						
+						<div class="navbar-header">
 							
-							<a class="pull-left btn js-toggle-app-drawer navbar-toggle collapsed" href="#">
-								<img src="/web_app_drawer/static/description/icon.png" class="css-app-drawer-toggle-mobile" />
-							</a>
+							<button type="button"
+									class="navbar-toggle collapsed pull-right"
+									data-toggle="collapse"
+									data-target="#odooMenuBarNav"
+									aria-expanded="false"
+									>
+								<span class="sr-only">Toggle Navigation</span>
+								<span class="icon-bar" />
+								<span class="icon-bar" />
+								<span class="icon-bar" />
+								<span class="icon-bar" />
+							</button>
 							
-							<a class="pull-left js-toggle-app-drawer navbar-collapse collapse" href="#">
-								<img src="/web_app_drawer/static/description/icon.png" class="css-app-drawer-toggle-desktop" />
-							</a>
-							
-							<div class="navbar-header">
-								
-								<button type="button"
-										class="navbar-toggle collapsed pull-right"
-										data-toggle="collapse"
-										data-target="#odooMenuBarNav"
-										aria-expanded="false"
-										>
-									<span class="sr-only">Toggle Navigation</span>
-									<span class="icon-bar" />
-									<span class="icon-bar" />
-									<span class="icon-bar" />
-									<span class="icon-bar" />
-								</button>
-								
+						</div>
+						
+						<div class="collapse navbar-collapse text-center" id="odooMenuBarNav">
+							<div class="nav navbar-nav oe_secondary_menus_container">
+								<t t-call="web.menu_secondary" />
 							</div>
-							
-							<div class="collapse navbar-collapse text-center" id="odooMenuBarNav">
-								<div class="nav navbar-nav oe_secondary_menus_container">
-									<t t-call="web.menu_secondary" />
-								</div>
-								<div class="nav navbar-nav navbar-right">
-									<ul class="nav navbar-nav navbar-right oe_user_menu_placeholder"
-										style="display: none;"
-										/>
-									<ul class="nav navbar-nav navbar-right oe_systray"
-										style="display: none;"
-										/>
-								</div>
+							<div class="nav navbar-nav navbar-right">
+								<ul class="nav navbar-nav navbar-right oe_user_menu_placeholder"
+									style="display: none;"
+									/>
+								<ul class="nav navbar-nav navbar-right oe_systray"
+									style="display: none;"
+									/>
 							</div>
 						</div>
-					</nav>
-					
-				</header>
-	
+					</div>
+				</nav>
+
 				<div class="openerp openerp_webclient_container oe_webclient">
 					<div class="oe_application"/>
 				</div>
-					
+			
 			</main>
 			
 		</t>
