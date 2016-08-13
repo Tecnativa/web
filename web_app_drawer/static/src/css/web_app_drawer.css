@@ -31,7 +31,8 @@ body {
 }
 
 .oe_topbar_avatar {
-    display: none;
+    height: 1.8em;
+    border-radius: 50%;
 }
 
 /* Dropdown Submenu */
