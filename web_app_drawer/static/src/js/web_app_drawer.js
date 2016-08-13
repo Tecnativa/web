@@ -11,9 +11,6 @@ odoo.define('web_app_drawer.app_drawer', function(require) {
     Menu.include({
         
         start: function() {
-            //this.is_bound.done(function() {
-            //    $('.drawer').drawer();
-            //});
             return this._super();
         },
         

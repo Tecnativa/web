@@ -174,10 +174,16 @@
 					 t-att-alt="menu['name']"
 					 t-att-title="menu['name']"
 					 />
+				<span class="css-app-drawer-title text-left navbar-toggle collapsed">
+					<t t-esc="menu['name']" />
+				</span>
+				<span class="css-app-drawer-title text-center collapse navbar-collapse">
+					<t t-esc="menu['name']" />
+				</span>
 			</t>
 			<t t-if="not display_images">
 				<span class="oe_menu_text">
-					<t t-esc="menu['name']"/>
+					<t t-esc="menu['name']" />
 				</span>
 			</t>
 		</a>
