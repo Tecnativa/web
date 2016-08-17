@@ -128,7 +128,10 @@ main {
 .drawer .css-app-drawer-icon-open.navbar-collapse {
     padding: 0.3em;
     margin: 0.2em;
-    background-color: #f8f8f8;
+}
+
+.css-app-drawer-toggle {
+    background-color: transparent;
 }
 
 .drawer .css-app-drawer-icon-close {
