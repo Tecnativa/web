@@ -51,10 +51,7 @@
 			<t t-set="body_classname" t-value="'drawer drawer--left'" />
 				
 			<header role="banner">
-				<button type="button" class="css-app-drawer-toggle drawer-toggle drawer-hamburger">
-					<span class="sr-only">Toggle Navigation</span>
-					<span class="drawer-hamburger-icon"></span>
-				</button>
+				
 				<nav id="odooAppDrawer" class="css-app-drawer-nav drawer-nav" role="navigation">
 					<t t-call="web.menu" />
 				</nav>
@@ -70,6 +67,24 @@
 						
 						<div class="navbar-header">
 							
+							<a href="#"
+							   class="drawer-toggle pull-left navbar-collapse collapse btn btn-default css-app-drawer-toggle"
+							   >
+								<span class="sr-only">Toggle Navigation</span>
+								<i class="fa fa-th fa-2x css-app-drawer-icon-open" />
+							</a>
+							
+							<button type="button"
+									class="css-app-drawer-toggle drawer-toggle pull-left navbar-toggle collapsed"
+									>
+								<span class="sr-only">Toggle Navigation</span>
+								<i class="fa fa-th fa-2x css-app-drawer-icon-open" />
+							</button>
+							
+							<a href="#" class="css-app-drawer-icon-close btn btn-danger">
+								<i class="fa fa-times fa-3x drawer-toggle" />
+							</a>
+							
 							<button type="button"
 									class="navbar-toggle collapsed pull-right"
 									data-toggle="collapse"
@@ -77,10 +92,7 @@
 									aria-expanded="false"
 									>
 								<span class="sr-only">Toggle Navigation</span>
-								<span class="icon-bar" />
-								<span class="icon-bar" />
-								<span class="icon-bar" />
-								<span class="icon-bar" />
+								<i class="fa fa-bars fa-2x" />
 							</button>
 							
 						</div>
@@ -170,7 +182,7 @@
 		   >
 			<t t-if="display_images">
 				<img t-attf-src="/web/image/ir.ui.menu/{{ menu['id'] }}/web_icon_data"
-					 class="css-app-drawer-icon img-rounded"
+					 class="css-app-drawer-icon-app img-rounded"
 					 t-att-alt="menu['name']"
 					 t-att-title="menu['name']"
 					 />

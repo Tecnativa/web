@@ -6,6 +6,12 @@ body {
     height: 100%;
 }
 
+main {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
 /* Menu Bar */
 .css-main-nav {
     margin-bottom: 0;
@@ -19,15 +25,6 @@ body {
 
 .css-main-nav div.progress {
     margin-top: .625em;
-}
-
-.css-app-drawer-toggle {
-    padding: 0.625em;
-}
-
-.js-toggle-app-drawer {
-    padding-top: 0;
-    padding-bottom: 0;
 }
 
 .oe_topbar_avatar {
@@ -92,23 +89,68 @@ body {
     background-color: #f8f8f8;
 }
 
-.css-app-drawer-icon {
+.css-app-drawer-title {
+    float: none;
+}
+
+.css-app-drawer-icon-app {
     height: 5.625em;
     width: 5.625em;
+    margin: 0.625em;
 }
 
 .drawer-nav {
-    width: 41.875em;
+    width: 80%;
 }
 
 .drawer--left .drawer-nav {
-    left: -41.875em;
+    left: -80%;
 }
 
 .drawer--left.drawer-open .drawer-hamburger {
-    left: 41.875em;
+    left: 80%;
 }
 
 .drawer--right .drawer-nav {
-    right: -41.875em;
+    right: -80%;
+}
+
+.drawer-open .oe-right-toolbar {
+    display: none;
+}
+
+.drawer-closed .oe-right-toolbar {
+    display: block;
+}
+
+/* App Drawer Toggle */
+
+.drawer .css-app-drawer-icon-open.navbar-collapse {
+    padding: 0.3em;
+    margin: 0.2em;
+    background-color: #f8f8f8;
+}
+
+.drawer .css-app-drawer-icon-close {
+    display: none;
+}
+
+.drawer--left.drawer-open .css-app-drawer-icon-close {
+    display: block;
+    position: fixed;
+    z-index: 9000;
+    left: 80%;
+    top: 0;
+}
+
+.drawer--right.drawer-open .css-app-drawer-icon-close {
+    display: block;
+    position: fixed;
+    z-index: 9000;
+    left: -80%;
+    top: 0;
+}
+
+.css-app-drawer-toggle.navbar-toggle {
+    margin-left: 1em;
 }

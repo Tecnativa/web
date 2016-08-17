@@ -10,10 +10,6 @@ odoo.define('web_app_drawer.app_drawer', function(require) {
     
     Menu.include({
         
-        start: function() {
-            return this._super();
-        },
-        
         reflow: function() {
             this._super('all_outside');
         },
