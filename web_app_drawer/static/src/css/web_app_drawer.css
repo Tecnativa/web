@@ -32,6 +32,12 @@ main {
     border-radius: 50%;
 }
 
+#odooMenuBarNav[aria-expanded="false"] {
+    /* Hack to hide the visibly expanded mobile menu on load. */
+    position: absolute;
+    z-index: -9999;
+}
+
 /* Dropdown Submenu */
 
 .dropdown-submenu {

@@ -86,10 +86,10 @@
 							</a>
 							
 							<button type="button"
+									id="odooMenuBarToggle"
 									class="navbar-toggle collapsed pull-right"
 									data-toggle="collapse"
 									data-target="#odooMenuBarNav"
-									aria-expanded="false"
 									>
 								<span class="sr-only">Toggle Navigation</span>
 								<i class="fa fa-bars fa-2x" />
@@ -97,7 +97,11 @@
 							
 						</div>
 						
-						<div class="collapse navbar-collapse text-center" id="odooMenuBarNav">
+						<div class="collapse navbar-collapse text-center"
+							 id="odooMenuBarNav"
+							 data-parent="#odooMenuBarToggle"
+							 aria-expanded="false"
+							 >
 							<div class="nav navbar-nav oe_secondary_menus_container">
 								<t t-call="web.menu_secondary" />
 							</div>
