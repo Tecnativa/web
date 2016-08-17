@@ -50,6 +50,9 @@ odoo.define('web_app_drawer.app_drawer', function(require) {
                              );
         $clickZones.click(function() {
             $('.drawer').drawer('close');
+            $('.oe_secondary_menus_container')
+                .parent()
+                .collapse('hide');
         });
     });
             
