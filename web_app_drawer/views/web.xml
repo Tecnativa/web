@@ -9,6 +9,7 @@
 
 	<template id="web.webclient_bootstrap" name="Webclient Mobile">
 		<t t-call="web.layout">
+			
 			<t t-set="head">
 				
 				<meta charset="utf-8" />
@@ -19,7 +20,8 @@
 				<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 					
 				<t t-call-assets="web.assets_common"/>
-				<script type="text/javascript">
+				
+				<script type="application/javascript">
 					odoo.define('web.csrf', function (require) {
 						var token = "<t t-esc="request.csrf_token(None)"/>";
 						require('web.core').csrf_token = token;
@@ -27,9 +29,11 @@
 					});
 					odoo.db_info = <t t-raw="db_info"/>;
 				</script>
+				
 				<t t-call-assets="web.assets_backend"/>
 				&lt;!--[if lte IE 9]&gt; <link rel="stylesheet" href="/web/static/src/css/ie.css"/> &lt;![endif]--&gt;
-				<script type="text/javascript">
+				
+				<script type="application/javascript">
 					$(function() {
 						<t t-if="init">
 							<t t-raw="init"/>
@@ -51,7 +55,6 @@
 			<t t-set="body_classname" t-value="'drawer drawer--left'" />
 				
 			<header role="banner">
-				
 				<nav id="odooAppDrawer" class="css-app-drawer-nav drawer-nav" role="navigation">
 					<t t-call="web.menu" />
 				</nav>
@@ -207,18 +210,28 @@
 	</template>
 
 	<template id="web.menu">
-
-		<ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
-			<li t-foreach="menu_data['children']" t-as="menu">
-				<t t-call="web.menu_link">
-					<t t-set="display_images" t-value="1" />
-				</t>
-			</li>
-			<li id="menu_more_container" class="dropdown" style="display: none;">
-				<a href="#" class="dropdown-toggle" data-toggle="dropdown">More <b class="caret"></b></a>
-				<ul id="menu_more" class="dropdown-menu"></ul>
-			</li>
-		</ul>
+		
+		<div class="panel panel-default css-app-drawer-app-panel" id="appDrawerAppMenu">
+			<div class="panel-heading" id="appDrawerAppPanelHead">
+				<h3 class="panel-title">
+					Apps
+				</h3>
+				<span class="css-app-drawer-search-container" />
+			</div>
+			<div class="panel-body" id="appDrawerAppPanelBody">
+				<ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
+					<li t-foreach="menu_data['children']" t-as="menu">
+						<t t-call="web.menu_link">
+							<t t-set="display_images" t-value="1" />
+						</t>
+					</li>
+					<li id="menu_more_container" class="dropdown" style="display: none;">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">More <b class="caret"></b></a>
+						<ul id="menu_more" class="dropdown-menu"></ul>
+					</li>
+				</ul>
+			</div>
+		</div>
 		
 	</template>
 

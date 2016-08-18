@@ -165,3 +165,8 @@ main {
 .css-app-drawer-toggle.navbar-toggle {
     margin-left: 1em;
 }
+
+.keyboard-selected {
+    color: #22527b;
+    background-color: #eeeeee;
+}

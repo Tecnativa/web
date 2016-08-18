@@ -18,4 +18,7 @@
         'views/assets.xml',
         'views/web.xml',
     ],
+    'qweb': [
+        'static/src/xml/*.xml',
+    ],
 }
