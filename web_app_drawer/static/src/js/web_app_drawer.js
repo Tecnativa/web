@@ -10,24 +10,24 @@ odoo.define('web_app_drawer.app_drawer', function(require) {
     var core = require('web.core');
     
     Menu.include({
-        
+        // Force all_outside to prevent app icons from going into more menu
         reflow: function() {
             this._super('all_outside');
         },
-        
     });
     
     SearchView.include({
         
-        // ReImplement core toggle_visibility to not focus when mobile
+        // Prevent focus of search field on mobile devices
         toggle_visibility: function (is_visible) {
-            this.do_toggle(!this.headless && is_visible);
-            if (this.$buttons) {
-                this.$buttons.toggle(!this.headless && is_visible && this.visible_filters);
-            }
-            if (!this.headless && is_visible && !this.isMobile()) {
-                this.$('div.oe_searchview_input').last().focus();
-            }
+            var self = this,
+                $searchField = $('div.oe_searchview_input').last();
+            $searchField.one('focus', function(){
+                if (self.isMobile()) {
+                    event.preventDefault();
+                }
+            });
+            return this._super(is_visible);
         },
         
         // For lack of Modernizr, TouchEvent will do
