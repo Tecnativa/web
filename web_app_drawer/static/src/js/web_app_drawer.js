@@ -1,11 +1,12 @@
 /* Copyright 2016 LasLabs Inc.
  * License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). */
 
-odoo.define('web_app_drawer.app_drawer', function(require) {
+odoo.define('web_app_drawer.AppDrawer', function(require) {
     'use strict';
     
     var $ = require('$');
     var Menu = require('web.Menu');
+    var Class = require('web.Class');
     var SearchView = require('web.SearchView');
     var core = require('web.core');
     
@@ -42,37 +43,48 @@ odoo.define('web_app_drawer.app_drawer', function(require) {
         
     });
     
-    core.bus.on('web_client_ready', null, function () {
-        var $clickZones = $('.openerp_webclient_container, ' +
+    var AppDrawer = Class.extend({
+        
+        init: function() {
+            this.$el = $('.drawer');
+            var $clickZones = $('.openerp_webclient_container, ' +
                              'a.oe_menu_leaf, ' +
                              'a.oe_menu_toggler'
                              ),
-            $drawer = $('.drawer'),
-            keyMod = 91,
-            keyA = 65;
-        $drawer.drawer();
-        if (navigator.appVersion.indexOf('Mac') != -1) {
-            keyMod = 17;
-        }
-        var keyMap = {keyA:false, keyCode: false};
-        $(window)
-            .keydown(function(e) {
-                keyMap[e.keyCode] = true;
-                if (keyMap[keyA] && keyMap[keyMod]) {
-                    $drawer.drawer('toggle');
-                }
-            })
-            .keyup(function(e) {
-                if (e.keyCode in keyMap) {
-                    keyMap[e.keyCode] = false;
-                }
+                self = this,
+                keyMod = 91,
+                keyA = 65;
+            this.$el.drawer();
+            if (navigator.appVersion.indexOf('Mac') != -1) {
+                keyMod = 17;
+            }
+            var keyMap = {keyA:false, keyCode: false};
+            $(window)
+                .keydown(function(e) {
+                    keyMap[e.keyCode] = true;
+                    if (keyMap[keyA] && keyMap[keyMod]) {
+                        self.$el.drawer('toggle');
+                    }
+                })
+                .keyup(function(e) {
+                    if (e.keyCode in keyMap) {
+                        keyMap[e.keyCode] = false;
+                    }
+                });
+            $clickZones.click(function() {
+                $('.drawer').drawer('close');
+                $('.oe_secondary_menus_container')
+                    .parent()
+                    .collapse('hide');
             });
-        $clickZones.click(function() {
-            $('.drawer').drawer('close');
-            $('.oe_secondary_menus_container')
-                .parent()
-                .collapse('hide');
-        });
+        },
+        
     });
-            
+    
+    core.bus.on('web_client_ready', null, function () {
+        new AppDrawer();
+    });
+    
+    return AppDrawer;
+      
 });
