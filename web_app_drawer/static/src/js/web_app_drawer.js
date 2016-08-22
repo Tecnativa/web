@@ -50,8 +50,8 @@ odoo.define('web_app_drawer', function(require) {
         // Constants used as math modifiers for x and y axis
         LEFT: [-1, 0],
         RIGHT: [1, 0],
-        UP: [0, 1],
-        DOWN: [0, -1],
+        UP: [0, -1],
+        DOWN: [0, 1],
         
         isOpen: false,
         $selectedAppLink: $(false),
@@ -159,13 +159,15 @@ odoo.define('web_app_drawer', function(require) {
          * @return jQuery match for adjacent applink (or empty)
          */
         findAdjacentAppLink: function($appLink, x_dir, y_dir) {
-            var x = parseInt($appLink.data('posX')) + x_dir,
-                y = parseInt($appLink.data('posY')) + y_dir;
+            var currentX = parseInt($appLink.data('posX')),
+                currentY = parseInt($appLink.data('posY')),
+                newX = currentX + x_dir,
+                newY = currentY + y_dir;
             try{
-                return this.linkMap[y][x];
-            } catch(ex) {
-                return;
-            }
+                return this.linkMap[newY][newX];
+            } catch(ex) {}
+            // @TODO: Add an inverse for when at beg/end of list
+            return;
         },
         
     });
