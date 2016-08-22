@@ -72,6 +72,7 @@
 							
 							<a href="#"
 							   class="drawer-toggle pull-left navbar-collapse collapse btn btn-default css-app-drawer-toggle"
+							   accesskey="A"
 							   >
 								<span class="sr-only">Toggle Navigation</span>
 								<i class="fa fa-th fa-2x css-app-drawer-icon-open" />
@@ -216,7 +217,6 @@
 				<h3 class="panel-title">
 					Apps
 				</h3>
-				<span class="css-app-drawer-search-container" />
 			</div>
 			<div class="panel-body" id="appDrawerAppPanelBody">
 				<ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
