@@ -32,7 +32,7 @@ main {
     border-radius: 50%;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     #odooMenuBarNav[aria-expanded="false"] {
         /* Hack to hide the visibly expanded mobile menu on load. */
         position: absolute;
