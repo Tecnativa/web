@@ -9,6 +9,7 @@ Web App Drawer
 This module moves the side navigation panel to a top menu bar. It also provides
 an app drawer that is mobile-compliant.
 
+
 Installation
 ============
 
@@ -18,13 +19,20 @@ Configuration
 Usage
 =====
 
+Keyboard Shortcuts
+------------------
+
+The following keyboard shortcuts are implemented:
+
+* Toggle App Drawer - `ActionKey <https://en.wikipedia.org/wiki/Access_key#Access_in_different_browsers`_+``A``
+* Navigate Apps Drawer - Arrow Keys
+
 .. image:: https://odoo-community.org/website/image/ir.attachment/5784_f2813bd/datas
    :alt: Try me on Runbot
    :target: https://runbot.odoo-community.org/runbot/154/9.0
 
 Known issues / Roadmap
 ======================
-
 
 Bug Tracker
 ===========

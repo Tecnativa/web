@@ -1,7 +1,7 @@
 /* Copyright 2016 LasLabs Inc.
  * License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). */
 
-odoo.define('web_app_drawer', function(require) {
+odoo.define('web_app_drawer.AppDrawer', function(require) {
     'use strict';
     
     var $ = require('$');
@@ -94,8 +94,7 @@ odoo.define('web_app_drawer', function(require) {
             if (Object.keys(this.directionCodes).indexOf(e.keyCode.toString()) !== -1) {
                 var $link = this.findAdjacentAppLink(
                     this.$selectedAppLink,
-                    this.directionCodes[e.keyCode][0],
-                    this.directionCodes[e.keyCode][1]
+                    this.directionCodes[e.keyCode]
                 );
                 this.selectAppLink($link);
             }
@@ -112,9 +111,9 @@ odoo.define('web_app_drawer', function(require) {
         onDrawerOpen: function() {
             var self = this;
             this.isOpen = true;
-            this.$appLinks = $('.css-app-drawer-icon-app').parent();
+            this.$appLinks = $('.app-drawer-icon-app').parent();
             this.selectAppLink($(this.$appLinks[0]));
-            this.linkMap = {};  // Key by row, col
+            this.$linkMap = {};  // Key by row, col
             var x = 0,
                 y = -1,
                 lastTop = -9999,
@@ -126,9 +125,9 @@ odoo.define('web_app_drawer', function(require) {
                 if (lastTop < newTop) {
                     y ++;
                     x = 0;
-                    self.linkMap[y] = {};
+                    self.$linkMap[y] = {};
                 }
-                self.linkMap[y][x] = $lastVal;
+                self.$linkMap[y][x] = $lastVal;
                 $lastVal.data('pos-x', x).data('pos-y', y);
                 x ++;
                 lastTop = newTop;
@@ -140,34 +139,32 @@ odoo.define('web_app_drawer', function(require) {
         
         // It provides a proxy method allowing for app link select w/ events
         selectAppLinkEvent: function(event) {
-            this.selectAppLink($(event.target));
+            this.selectAppLink($(event.currentTarget));
         },
         
         // It selects an app link visibly
         selectAppLink: function($appLink) {
             if ($appLink) {
                 this.$selectedAppLink = $appLink;
-                this.$appLinks.removeClass('keyboard-selected');
-                $appLink.addClass('keyboard-selected').focus();
+                $appLink.focus();
             }
         },
         
-        /* Find icon adjacent to app link
-         * @param $el App icon link
-         * @param x_mod either LEFT, RIGHT, NONE
-         * @param y_mod either UP, DOWN, NONE
-         * @return jQuery match for adjacent applink (or empty)
+        /* Find the link adjacent to $appLink in provided direction
+         * @param $appLink jQuery obj of App icon link
+         * @param direction Array for direction to look [int:x, int:y]
+         * @return jQuery obj for adjacent applink
          */
-        findAdjacentAppLink: function($appLink, x_dir, y_dir) {
+        findAdjacentAppLink: function($appLink, direction) {
             var currentX = parseInt($appLink.data('posX')),
                 currentY = parseInt($appLink.data('posY')),
-                newX = currentX + x_dir,
-                newY = currentY + y_dir;
+                newX = currentX + direction[0],
+                newY = currentY + direction[1];
             try{
-                return this.linkMap[newY][newX];
+                return this.$linkMap[newY][newX];
             } catch(ex) {}
             // @TODO: Add an inverse for when at beg/end of list
-            return;
+            return $();
         },
         
     });
@@ -176,8 +173,6 @@ odoo.define('web_app_drawer', function(require) {
         new AppDrawer();
     });
     
-    return {
-        AppDrawer: AppDrawer,
-    };
+    return AppDrawer;
     
 });

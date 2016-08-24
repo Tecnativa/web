@@ -13,17 +13,17 @@ main {
 }
 
 /* Menu Bar */
-.css-main-nav {
+.main-nav {
     margin-bottom: 0;
     min-height: 2em;
 }
 
-.css-main-nav ul.nav > li > a {
+.main-nav ul.nav > li > a {
     padding: 0.625em; 
     height: 2.5em;
 }
 
-.css-main-nav div.progress {
+.main-nav div.progress {
     margin-top: .625em;
 }
 
@@ -91,17 +91,17 @@ main {
 }
 
 /* App Drawer */
-.css-app-drawer-nav {
+.app-drawer-nav {
     border-color: #e7e7e7;
     color: #333333;
     background-color: #f8f8f8;
 }
 
-.css-app-drawer-title {
+.app-drawer-title {
     float: none;
 }
 
-.css-app-drawer-icon-app {
+.app-drawer-icon-app {
     height: 5.625em;
     width: 5.625em;
     margin: 0.625em;
@@ -133,20 +133,20 @@ main {
 
 /* App Drawer Toggle */
 
-.drawer .css-app-drawer-icon-open.navbar-collapse {
+.drawer .app-drawer-icon-open.navbar-collapse {
     padding: 0.3em;
     margin: 0.2em;
 }
 
-.css-app-drawer-toggle {
+.app-drawer-toggle {
     background-color: transparent;
 }
 
-.drawer .css-app-drawer-icon-close {
+.drawer .app-drawer-icon-close {
     display: none;
 }
 
-.drawer--left.drawer-open .css-app-drawer-icon-close {
+.drawer--left.drawer-open .app-drawer-icon-close {
     display: block;
     position: fixed;
     z-index: 9000;
@@ -154,7 +154,7 @@ main {
     top: 0;
 }
 
-.drawer--right.drawer-open .css-app-drawer-icon-close {
+.drawer--right.drawer-open .app-drawer-icon-close {
     display: block;
     position: fixed;
     z-index: 9000;
@@ -162,11 +162,6 @@ main {
     top: 0;
 }
 
-.css-app-drawer-toggle.navbar-toggle {
+.app-drawer-toggle.navbar-toggle {
     margin-left: 1em;
-}
-
-.keyboard-selected {
-    color: #22527b;
-    background-color: #eeeeee;
 }
