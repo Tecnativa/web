@@ -135,81 +135,81 @@
     </template>
 
     <template id="menu_secondary"
-			  inherit_id="web.menu_secondary"
-			  name="App Drawer - Secondary Menu"
-			  >
+              inherit_id="web.menu_secondary"
+              name="App Drawer - Secondary Menu"
+              >
         
-		<xpath expr="//a[@class='oe_logo']" position="attributes">
-			<attribute name="style">display: none;</attribute>
-		</xpath>
-		
-		<xpath expr="//div[@class='oe_footer']" position="attributes">
-			<attribute name="style">display: none;</attribute>
-		</xpath>
-		
-		<xpath expr="//div[@class='oe_secondary_menus_container']/t" position="replace">
-		
-			<t t-foreach="menu_data['children']" t-as="menu">
-				<ul style="display: none" class="oe_secondary_menu nav navbar-nav" t-att-data-menu-parent="menu['id']">
-					<t t-call="web.menu_secondary_submenu" />
-				</ul>
-			</t>
-			
-		</xpath>
-		
+        <xpath expr="//a[@class='oe_logo']" position="attributes">
+            <attribute name="style">display: none;</attribute>
+        </xpath>
+        
+        <xpath expr="//div[@class='oe_footer']" position="attributes">
+            <attribute name="style">display: none;</attribute>
+        </xpath>
+        
+        <xpath expr="//div[@class='oe_secondary_menus_container']/t" position="replace">
+        
+            <t t-foreach="menu_data['children']" t-as="menu">
+                <ul style="display: none" class="oe_secondary_menu nav navbar-nav" t-att-data-menu-parent="menu['id']">
+                    <t t-call="web.menu_secondary_submenu" />
+                </ul>
+            </t>
+            
+        </xpath>
+        
     </template>
 
     <template id="menu_secondary_submenu"
-			  inherit_id="web.menu_secondary_submenu"
-			  name="App Drawer - Secondary Submenu"
-			  >
-		
-		<xpath expr="//ul" position="replace">
-		
-			<t t-foreach="menu['children']" t-as="menu">
-				<t t-if="menu['children']">
-					<li t-attf-class="{{ 'dropdown-submenu' if submenu else '' }}">
-						<t t-if="submenu">
-							<a href="#" class="dropdown-toggle">
-								<t t-esc="menu['name']" />
-							 </a>
-						</t>
-						<t t-if="not submenu">
-							<a href="#"
-							   class="dropdown-toggle"
-							   data-toggle="dropdown"
-							   role="button"
-							   aria-haspopup="true"
-							   aria-expanded="false"
-							   >
-								<t t-esc="menu['name']" />
-								<span class="caret" />
-							 </a>
-						</t>
-						<ul t-if="menu['children']"
-							t-attf-class="dropdown-menu oe_secondary_submenu"
-							>
-							<t t-call="web.menu_secondary_submenu">
-								<t t-set="submenu" t-value="True" />
-							</t>
-						</ul>
-					</li>
-				</t>
-				<t t-if="not menu['children']">
-					<li>
-						<t t-call="web.menu_link" />
-					</li>
-				</t>
-			</t>
-			
-		</xpath>
-		
+              inherit_id="web.menu_secondary_submenu"
+              name="App Drawer - Secondary Submenu"
+              >
+        
+        <xpath expr="//ul" position="replace">
+        
+            <t t-foreach="menu['children']" t-as="menu">
+                <t t-if="menu['children']">
+                    <li t-attf-class="{{ 'dropdown-submenu' if submenu else '' }}">
+                        <t t-if="submenu">
+                            <a href="#" class="dropdown-toggle">
+                                <t t-esc="menu['name']" />
+                             </a>
+                        </t>
+                        <t t-if="not submenu">
+                            <a href="#"
+                               class="dropdown-toggle"
+                               data-toggle="dropdown"
+                               role="button"
+                               aria-haspopup="true"
+                               aria-expanded="false"
+                               >
+                                <t t-esc="menu['name']" />
+                                <span class="caret" />
+                             </a>
+                        </t>
+                        <ul t-if="menu['children']"
+                            t-attf-class="dropdown-menu oe_secondary_submenu"
+                            >
+                            <t t-call="web.menu_secondary_submenu">
+                                <t t-set="submenu" t-value="True" />
+                            </t>
+                        </ul>
+                    </li>
+                </t>
+                <t t-if="not menu['children']">
+                    <li>
+                        <t t-call="web.menu_link" />
+                    </li>
+                </t>
+            </t>
+            
+        </xpath>
+        
     </template>
 
     <template id="menu_link"
-			  inherit_id="web.menu_link"
-			  name="App Drawer - Menu Link"
-			  >
+              inherit_id="web.menu_link"
+              name="App Drawer - Menu Link"
+              >
         
         <xpath expr="//span[@class='oe_menu_text']" position="replace">
             <t t-if="display_images">
@@ -235,43 +235,43 @@
     </template>
 
     <template id="menu"
-			  inherit_id="web.menu"
-			  name="App Drawer - Menu"
-			  >
+              inherit_id="web.menu"
+              name="App Drawer - Menu"
+              >
         
-		<xpath expr="//ul[contains(@class, 'oe_systray')]" position="attributes">
-			<attribute name="class">hidden</attribute>
-		</xpath>
-		
-		<xpath expr="//ul[contains(@class, 'oe_user_menu_placeholder')]" position="attributes">
-			<attribute name="class">hidden</attribute>
-		</xpath>
-		
-		<xpath expr="//ul[contains(@class, 'oe_application_menu_placeholder')]" position="replace">
-			
-			<div class="panel panel-default app-drawer-app-panel" id="appDrawerAppMenu">
-				<div class="panel-heading" id="appDrawerAppPanelHead">
-					<h3 class="panel-title">
-						Apps
-					</h3>
-				</div>
-				<div class="panel-body" id="appDrawerAppPanelBody">
-					<ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
-						<li t-foreach="menu_data['children']" t-as="menu">
-							<t t-call="web.menu_link">
-								<t t-set="display_images" t-value="1" />
-							</t>
-						</li>
-						<li id="menu_more_container" class="dropdown" style="display: none;">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown">More <b class="caret"></b></a>
-							<ul id="menu_more" class="dropdown-menu"></ul>
-						</li>
-					</ul>
-				</div>
-			</div>
-			
-		</xpath>
-		
+        <xpath expr="//ul[contains(@class, 'oe_systray')]" position="attributes">
+            <attribute name="class">hidden</attribute>
+        </xpath>
+        
+        <xpath expr="//ul[contains(@class, 'oe_user_menu_placeholder')]" position="attributes">
+            <attribute name="class">hidden</attribute>
+        </xpath>
+        
+        <xpath expr="//ul[contains(@class, 'oe_application_menu_placeholder')]" position="replace">
+            
+            <div class="panel panel-default app-drawer-app-panel" id="appDrawerAppMenu">
+                <div class="panel-heading" id="appDrawerAppPanelHead">
+                    <h3 class="panel-title">
+                        Apps
+                    </h3>
+                </div>
+                <div class="panel-body" id="appDrawerAppPanelBody">
+                    <ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
+                        <li t-foreach="menu_data['children']" t-as="menu">
+                            <t t-call="web.menu_link">
+                                <t t-set="display_images" t-value="1" />
+                            </t>
+                        </li>
+                        <li id="menu_more_container" class="dropdown" style="display: none;">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">More <b class="caret"></b></a>
+                            <ul id="menu_more" class="dropdown-menu"></ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+        </xpath>
+        
         
     </template>
 
