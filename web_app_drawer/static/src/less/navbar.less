@@ -1,0 +1,25 @@
+/* Copyright 2016 LasLabs Inc.
+ * License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). */
+
+.main-nav {
+    margin-bottom: @navbar-margin-bottom;
+    min-height: @navbar-height;
+}
+
+.main-nav ul.nav > li > a {
+    padding: @navbar-padding-vertical @navbar-padding-horizontal;
+    height: @navbar-height;
+}
+
+.oe_topbar_avatar {
+    height: (@navbar-height - 20%);
+    border-radius: 50%;
+}
+
+@media (max-width: 767px) {
+    #odooMenuBarNav[aria-expanded="false"] {
+        /* Hack to hide the visibly expanded mobile menu on load. */
+        position: absolute;
+        z-index: -9999;
+    }
+}
