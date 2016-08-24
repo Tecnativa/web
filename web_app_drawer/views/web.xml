@@ -7,131 +7,96 @@
 
 <odoo>
 
-	<template id="web.webclient_bootstrap" name="Webclient Mobile">
-		<t t-call="web.layout">
-			
-			<t t-set="head">
-				
-				<meta charset="utf-8" />
-				<meta http-equiv="cleartype" content="on" />
-				<meta name="MobileOptimized" content="320" />
-				<meta name="HandheldFriendly" content="True" />
-				<meta name="apple-mobile-web-app-capable" content="yes" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-					
-				<t t-call-assets="web.assets_common"/>
-				
-				<script type="application/javascript">
-					odoo.define('web.csrf', function (require) {
-						var token = "<t t-esc="request.csrf_token(None)"/>";
-						require('web.core').csrf_token = token;
-						require('qweb').default_dict.csrf_token = token;
-					});
-					odoo.db_info = <t t-raw="db_info"/>;
-				</script>
-				
-				<t t-call-assets="web.assets_backend"/>
-				&lt;!--[if lte IE 9]&gt; <link rel="stylesheet" href="/web/static/src/css/ie.css"/> &lt;![endif]--&gt;
-				
-				<script type="application/javascript">
-					$(function() {
-						<t t-if="init">
-							<t t-raw="init"/>
-						</t>
-						<t t-if="not init">
-							odoo.define('web.web_client', function (require) {
-								var WebClient = require('web.WebClient');
-								var web_client = new WebClient();
-								web_client.setElement($(document.body));
-								web_client.start();
-								return web_client;
-							});
-						</t>
-					});
-				</script>
-
-			</t>
-			
-			<t t-set="body_classname" t-value="'drawer drawer--left'" />
-				
-			<header role="banner">
-				<nav id="odooAppDrawer" class="css-app-drawer-nav drawer-nav" role="navigation">
-					<t t-call="web.menu" />
-				</nav>
-			</header>
-				
-			<main role="main">
-				
-				<nav class="navbar navbar-default css-main-nav"
-					 role="navigation"
-					 groups="base.group_user,base.group_portal"
-					 >
-					<div class="container-fluid">
-						
-						<div class="navbar-header">
-							
-							<a href="#"
-							   class="drawer-toggle pull-left navbar-collapse collapse btn btn-default css-app-drawer-toggle"
-							   accesskey="A"
-							   >
-								<span class="sr-only">Toggle Navigation</span>
-								<i class="fa fa-th fa-2x css-app-drawer-icon-open" />
-							</a>
-							
-							<button type="button"
-									class="css-app-drawer-toggle drawer-toggle pull-left navbar-toggle collapsed"
-									>
-								<span class="sr-only">Toggle Navigation</span>
-								<i class="fa fa-th fa-2x css-app-drawer-icon-open" />
-							</button>
-							
-							<a href="#" class="css-app-drawer-icon-close btn btn-danger">
-								<i class="fa fa-times fa-3x drawer-toggle" />
-							</a>
-							
-							<button type="button"
-									id="odooMenuBarToggle"
-									class="navbar-toggle collapsed pull-right"
-									data-toggle="collapse"
-									data-target="#odooMenuBarNav"
-									>
-								<span class="sr-only">Toggle Navigation</span>
-								<i class="fa fa-bars fa-2x" />
-							</button>
-							
-						</div>
-						
-						<div class="collapse navbar-collapse text-center"
-							 id="odooMenuBarNav"
-							 data-parent="#odooMenuBarToggle"
-							 aria-expanded="false"
-							 >
-							<div class="nav navbar-nav oe_secondary_menus_container">
-								<t t-call="web.menu_secondary" />
-							</div>
-							<div class="nav navbar-nav navbar-right">
-								<ul class="nav navbar-nav navbar-right oe_user_menu_placeholder"
-									style="display: none;"
-									/>
-								<ul class="nav navbar-nav navbar-right oe_systray"
-									style="display: none;"
-									/>
-							</div>
-						</div>
-					</div>
-				</nav>
-
-				<div class="openerp openerp_webclient_container oe_webclient">
-					<div class="oe_application"/>
-				</div>
-			
-			</main>
-			
-		</t>
-	</template>
-
-		</xpath>
-		
+    <template id="webclient_bootstrap"
+              inherit_id="web.webclient_bootstrap"
+              name="App Drawer - Web Client"
+              >
+        
+        <xpath expr="//div[@class='oe_leftbar']" position="attributes">
+            <attribute name="class">hidden</attribute>
+        </xpath>
+        
+        <xpath expr="//t[@t-set='head']" position="inside">
+            <meta charset="utf-8" />
+            <meta http-equiv="cleartype" content="on" />
+            <meta name="MobileOptimized" content="320" />
+            <meta name="HandheldFriendly" content="True" />
+            <meta name="apple-mobile-web-app-capable" content="yes" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        </xpath>
+        
+        <xpath expr="//nav[@id='oe_main_menu_navbar']" position="replace">
+            
+            <t t-set="body_classname" t-value="'drawer drawer--left'" />
+                
+            <header role="banner">
+                <nav id="odooAppDrawer" class="app-drawer-nav drawer-nav" role="navigation">
+                    <t t-call="web.menu" />
+                </nav>
+                
+                <nav class="navbar navbar-default main-nav"
+                     role="navigation"
+                     groups="base.group_user,base.group_portal"
+                     >
+                    <div class="container-fluid">
+                        
+                        <div class="navbar-header">
+                            
+                            <a href="#"
+                               class="drawer-toggle pull-left navbar-collapse collapse btn btn-default app-drawer-toggle"
+                               accesskey="A"
+                               >
+                                <span class="sr-only">Toggle Navigation</span>
+                                <i class="fa fa-th fa-2x app-drawer-icon-open" />
+                            </a>
+                            
+                            <button type="button"
+                                    class="app-drawer-toggle drawer-toggle pull-left navbar-toggle collapsed"
+                                    >
+                                <span class="sr-only">Toggle Navigation</span>
+                                <i class="fa fa-th fa-2x app-drawer-icon-open" />
+                            </button>
+                            
+                            <a href="#" class="app-drawer-icon-close btn btn-danger">
+                                <i class="fa fa-times fa-3x drawer-toggle" />
+                            </a>
+                            
+                            <button type="button"
+                                    id="odooMenuBarToggle"
+                                    class="navbar-toggle collapsed pull-right"
+                                    data-toggle="collapse"
+                                    data-target="#odooMenuBarNav"
+                                    >
+                                <span class="sr-only">Toggle Navigation</span>
+                                <i class="fa fa-bars fa-2x" />
+                            </button>
+                            
+                        </div>
+                        
+                        <div class="collapse navbar-collapse text-center"
+                             id="odooMenuBarNav"
+                             data-parent="#odooMenuBarToggle"
+                             aria-expanded="false"
+                             >
+                            <div class="oe_leftbar" groups="base.group_user,base.group_portal">
+                                <t t-call="web.menu_secondary" />
+                            </div>
+                            <div class="nav navbar-nav navbar-right">
+                                <ul class="nav navbar-nav navbar-right oe_user_menu_placeholder"
+                                    style="display: none;"
+                                    />
+                                <ul class="nav navbar-nav navbar-right oe_systray"
+                                    style="display: none;"
+                                    />
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                
+            </header>
+            
+        </xpath>
+        
     </template>
 
     <template id="menu_secondary"
