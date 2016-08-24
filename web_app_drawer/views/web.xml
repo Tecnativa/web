@@ -58,7 +58,7 @@
                             </button>
                             
                             <a href="#" class="app-drawer-icon-close btn btn-danger">
-                                <i class="fa fa-times fa-3x drawer-toggle" />
+                                <i class="fa fa-times fa-2x drawer-toggle" />
                             </a>
                             
                             <button type="button"

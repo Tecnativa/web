@@ -25,6 +25,7 @@
 
 .drawer-nav {
     width: @app-drawer-width;
+    z-index: 9999;
 }
 
 .drawer--left .drawer-nav {
@@ -47,6 +48,10 @@
     display: block;
 }
 
+#appDrawerAppPanelHead {
+    height: @app-drawer-title-height;
+}
+
 /* App Drawer Toggle */
 
 .app-drawer-toggle {
@@ -56,6 +61,7 @@
 
 .drawer .app-drawer-icon-close {
     display: none;
+    height: app-drawer-title-height;
 }
 
 .drawer--left.drawer-open .app-drawer-icon-close {
