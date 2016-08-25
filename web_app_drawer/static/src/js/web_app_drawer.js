@@ -47,15 +47,16 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
     
     var AppDrawer = Class.extend({
         
-        // Constants used as math modifiers for x and y axis
-        LEFT: [-1, 0],
-        RIGHT: [1, 0],
-        UP: [0, -1],
-        DOWN: [0, 1],
+        LEFT: 'left',
+        RIGHT: 'right',
+        UP: 'up',
+        DOWN: 'down',
         
         isOpen: false,
         $selectedAppLink: $(false),
-        currentPos: [0, 0],
+        keyBuffer: '',
+        keyBufferTime: 500,
+        keyBufferTimeoutEvent: false,
         
         init: function() {
             this.$el = $('.drawer');
@@ -97,9 +98,27 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
                     this.directionCodes[e.keyCode]
                 );
                 this.selectAppLink($link);
+            } else {
+                var buffer = this.handleKeyBuffer(e.keyCode);
+                this.selectAppLink(this.searchAppLinks(buffer));
             }
         },
         
+        // It adds to keybuffer, sets expire timer, and returns buffer
+        handleKeyBuffer: function(keyCode) {
+            this.keyBuffer += String.fromCharCode(keyCode);
+            if (this.keyBufferTimeoutEvent) {
+                clearTimeout(this.keyBufferTimeoutEvent);
+            }
+            this.keyBufferTimeoutEvent = setTimeout(this.clearKeyBuffer, this.keyBufferTime);
+            return this.keyBuffer;
+        },
+        
+        clearKeyBuffer: function() {
+            this.keyBuffer = '';
+        },
+        
+        // It performs close actions & bubbles a ``drawer.closed`` core.bus event
         onDrawerClose: function() {
             this.isOpen = false;
             this.$selectedAppLink = $(false);
@@ -128,6 +147,16 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
                 this.$selectedAppLink = $appLink;
                 $appLink.focus();
             }
+        },
+        
+        /* It searches for app links by name and returns the first match
+         * @param query str to search
+         * @return jQuery obj
+         */
+        searchAppLinks: function(query) {
+            return this.$appLinks.filter(function() {
+                return $(this).data('menuName').toUpperCase().startsWith(query);
+            }).first();
         },
         
         /* Find the link adjacent to $appLink in provided direction
