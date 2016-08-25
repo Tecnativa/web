@@ -78,7 +78,10 @@
                              data-parent="#odooMenuBarToggle"
                              aria-expanded="false"
                              >
-                            <div class="oe_leftbar" groups="base.group_user,base.group_portal">
+                            <div class="oe_leftbar"
+                                 groups="base.group_user,base.group_portal"
+                                 accesskey="S"
+                                 >
                                 <t t-call="web.menu_secondary" />
                             </div>
                             <div class="nav navbar-nav navbar-right">

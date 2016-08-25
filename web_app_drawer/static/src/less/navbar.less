@@ -17,7 +17,11 @@
     border-radius: 50%;
 }
 
-@media (max-width: 767px) {
+.progress {
+    margin-top: -@navbar-padding-horizontal;
+}
+
+@media (max-width: @screen-sm - 1px) {
     #odooMenuBarNav[aria-expanded="false"] {
         /* Hack to hide the visibly expanded mobile menu on load. */
         position: absolute;

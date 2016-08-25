@@ -109,29 +109,9 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
         
         // Generate x and y coords for app icons
         onDrawerOpen: function() {
-            var self = this;
             this.isOpen = true;
             this.$appLinks = $('.app-drawer-icon-app').parent();
             this.selectAppLink($(this.$appLinks[0]));
-            this.$linkMap = {};  // Key by row, col
-            var x = 0,
-                y = -1,
-                lastTop = -9999,
-                newTop = null,
-                $lastVal = null;
-            _.each(this.$appLinks, function(val) {
-                $lastVal = $(val);
-                newTop = $lastVal.offset().top;
-                if (lastTop < newTop) {
-                    y ++;
-                    x = 0;
-                    self.$linkMap[y] = {};
-                }
-                self.$linkMap[y][x] = $lastVal;
-                $lastVal.data('pos-x', x).data('pos-y', y);
-                x ++;
-                lastTop = newTop;
-            });
             this.$appLinks.on('mouseenter', $.proxy(this.selectAppLinkEvent, this));
             this.$el.one('drawer.closed', $.proxy(this.onDrawerClose, this));
             core.bus.trigger('drawer.opened');
@@ -156,15 +136,57 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
          * @return jQuery obj for adjacent applink
          */
         findAdjacentAppLink: function($appLink, direction) {
-            var currentX = parseInt($appLink.data('posX')),
-                currentY = parseInt($appLink.data('posY')),
-                newX = currentX + direction[0],
-                newY = currentY + direction[1];
-            try{
-                return this.$linkMap[newY][newX];
-            } catch(ex) {}
-            // @TODO: Add an inverse for when at beg/end of list
-            return $();
+            
+            var obj = [],
+                $objs = this.$appLinks;
+            
+            switch(direction){
+                case this.LEFT:
+                    obj = $objs[$objs.index($appLink) - 1];
+                    if (!obj) {
+                        obj = $objs[$objs.length - 1];
+                    }
+                    break;
+                case this.RIGHT:
+                    obj = $objs[$objs.index($appLink) + 1];
+                    break;
+                case this.UP:
+                    $objs = this.getRowObjs($appLink, this.$appLinks);
+                    obj = $objs[$objs.index($appLink) - 1];
+                    if (!obj) {
+                        obj = $objs[$objs.length - 1];
+                    }
+                    break;
+                case this.DOWN:
+                    $objs = this.getRowObjs($appLink, this.$appLinks);
+                    obj = $objs[$objs.index($appLink) + 1];
+                    if (!obj) {
+                        obj = $objs[0];
+                    }
+                    break;
+            }
+            
+            return $(obj);
+            
+        },
+        
+        /* Return els in the same row
+         * @param @obj jQuery object to get row for
+         * @param $grid jQuery objects representing grid
+         * @return $objs jQuery objects of row
+         */
+        getRowObjs: function($obj, $grid) {
+            // Filter by object which middle lies within left/right bounds
+            function filterWithin(left, right) {
+                return function() {
+                    var $this = $(this),
+                        thisMiddle = $this.offset().left + ($this.width() / 2);
+                    return thisMiddle >= left && thisMiddle <= right;
+                };
+            }
+            var left = $obj.offset().left,
+                right = left + $obj.outerWidth();
+            return $grid.filter(filterWithin(left, right));
         },
         
     });
