@@ -178,6 +178,9 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
                     break;
                 case this.RIGHT:
                     obj = $objs[$objs.index($appLink) + 1];
+                    if (!obj) {
+                        obj = $objs[0];
+                    }
                     break;
                 case this.UP:
                     $objs = this.getRowObjs($appLink, this.$appLinks);
