@@ -34,6 +34,11 @@ The following keyboard shortcuts are implemented:
 Known issues / Roadmap
 ======================
 
+* Notification bubble issues - https://github.com/OCA/web/pull/396#issuecomment-242276577
+* Finish implementing type to select app feature
+* Provide keyboard navigation to secondary (top) menu
+* Drag drawer from left to open in mobile
+
 Bug Tracker
 ===========
 
