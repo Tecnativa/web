@@ -14,19 +14,16 @@
                   href="/web_app_drawer/static/lib/css/drawer.3.2.0.css"
                   />
             <link rel="stylesheet"
-                  href="/web_app_drawer/static/src/less/variables.less"
-                  />
-            <link rel="stylesheet"
                   href="/web_app_drawer/static/src/less/main.less"
-                  />
-            <link rel="stylesheet"
-                  href="/web_app_drawer/static/src/less/dropdowns.less"
                   />
             <link rel="stylesheet"
                   href="/web_app_drawer/static/src/less/navbar.less"
                   />
             <link rel="stylesheet"
                   href="/web_app_drawer/static/src/less/app_drawer.less"
+                  />
+            <link rel="stylesheet"
+                  href="/web_app_drawer/static/src/less/variables.less"
                   />
             <script type="application/javascript"
                     src="/web_app_drawer/static/lib/js/iscroll.5.2.0.js"

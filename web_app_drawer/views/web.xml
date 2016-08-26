@@ -12,9 +12,7 @@
               name="App Drawer - Web Client"
               >
         
-        <xpath expr="//div[@class='oe_leftbar']" position="attributes">
-            <attribute name="class">hidden</attribute>
-        </xpath>
+        <xpath expr="//div[@class='oe_leftbar']" position="replace" />
         
         <xpath expr="//t[@t-set='head']" position="inside">
             <meta charset="utf-8" />
@@ -80,7 +78,6 @@
                              >
                             <div class="oe_leftbar"
                                  groups="base.group_user,base.group_portal"
-                                 accesskey="S"
                                  >
                                 <t t-call="web.menu_secondary" />
                             </div>
@@ -107,13 +104,9 @@
               name="App Drawer - Secondary Menu"
               >
         
-        <xpath expr="//a[@class='oe_logo']" position="attributes">
-            <attribute name="style">display: none;</attribute>
-        </xpath>
+        <xpath expr="//a[@class='oe_logo']" position="replace" />
         
-        <xpath expr="//div[@class='oe_footer']" position="attributes">
-            <attribute name="style">display: none;</attribute>
-        </xpath>
+        <xpath expr="//div[@class='oe_footer']" position="replace" />
         
         <xpath expr="//div[@class='oe_secondary_menus_container']/t" position="replace">
         
@@ -133,14 +126,16 @@
               >
         
         <xpath expr="//ul" position="replace">
-        
+            
             <t t-foreach="menu['children']" t-as="menu">
                 <t t-if="menu['children']">
-                    <li t-attf-class="{{ 'dropdown-submenu' if submenu else '' }}">
+                    <li t-attf-class="{{ 'dropdown-header' if submenu else '' }}">
                         <t t-if="submenu">
-                            <a href="#" class="dropdown-toggle">
-                                <t t-esc="menu['name']" />
-                             </a>
+                            <t t-esc="menu['name']" />
+                            <t t-call="web.menu_secondary_submenu">
+                                <t t-set="submenu" t-value="True" />
+                            </t>
+                            <li role="separator" class="divider" />
                         </t>
                         <t t-if="not submenu">
                             <a href="#"
@@ -153,14 +148,14 @@
                                 <t t-esc="menu['name']" />
                                 <span class="caret" />
                              </a>
+                            <ul t-if="menu['children']"
+                                t-attf-class="dropdown-menu oe_secondary_submenu dropdown-scrollable"
+                                >
+                                <t t-call="web.menu_secondary_submenu">
+                                    <t t-set="submenu" t-value="True" />
+                                </t>
+                            </ul>
                         </t>
-                        <ul t-if="menu['children']"
-                            t-attf-class="dropdown-menu oe_secondary_submenu"
-                            >
-                            <t t-call="web.menu_secondary_submenu">
-                                <t t-set="submenu" t-value="True" />
-                            </t>
-                        </ul>
                     </li>
                 </t>
                 <t t-if="not menu['children']">
@@ -180,9 +175,7 @@
               >
         
         <xpath expr="//a" position="attributes">
-            <attribute name="t-att-data-menu-name">
-                menu['name']
-            </attribute>
+            <attribute name="t-att-data-menu-name">menu['name']</attribute>
         </xpath>
         
         <xpath expr="//span[@class='oe_menu_text']" position="replace">
@@ -213,17 +206,13 @@
               name="App Drawer - Menu"
               >
         
-        <xpath expr="//ul[contains(@class, 'oe_systray')]" position="attributes">
-            <attribute name="class">hidden</attribute>
-        </xpath>
+        <xpath expr="//ul[contains(@class, 'oe_systray')]" position="replace" />
         
-        <xpath expr="//ul[contains(@class, 'oe_user_menu_placeholder')]" position="attributes">
-            <attribute name="class">hidden</attribute>
-        </xpath>
+        <xpath expr="//ul[contains(@class, 'oe_user_menu_placeholder')]" position="replace" />
         
         <xpath expr="//ul[contains(@class, 'oe_application_menu_placeholder')]" position="replace">
             
-            <div class="panel panel-default app-drawer-app-panel" id="appDrawerAppMenu">
+            <div class="panel-default app-drawer-app-panel" id="appDrawerAppMenu">
                 <div class="panel-heading" id="appDrawerAppPanelHead">
                     <h3 class="panel-title">
                         Apps

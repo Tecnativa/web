@@ -35,6 +35,7 @@ Known issues / Roadmap
 ======================
 
 * Notification bubble issues - https://github.com/OCA/web/pull/396#issuecomment-242276577
+* Chevron icon to replace x, place in front of ``#appDrawerAppPanelHead>h3``` & remove associated CSS
 * Finish implementing type to select app feature
 * Provide keyboard navigation to secondary (top) menu
 * Drag drawer from left to open in mobile
@@ -43,7 +44,7 @@ Bug Tracker
 ===========
 
 Bugs are tracked on `GitHub Issues
-<https://github.com/OCA/{project_repo}/issues>`_. In case of trouble, please
+<https://github.com/OCA/web/issues>`_. In case of trouble, please
 check there if your issue has already been reported. If you spotted it first,
 help us smashing it by providing a detailed and welcomed feedback.
 
