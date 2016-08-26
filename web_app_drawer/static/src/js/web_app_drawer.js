@@ -62,12 +62,14 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             this.$el = $('.drawer');
             this.$el.drawer();
             this.directionCodes = {
-                37: this.LEFT,  // Left arrow
-                39: this.RIGHT,  // Right arrow
-                38: this.UP,  // Up arrow
-                33: this.UP,  // page up
-                40: this.DOWN,  // Down arrow
-                34: this.DOWN,  // page down
+                'left': this.LEFT,
+                'right': this.RIGHT,
+                'up': this.UP,
+                'pageup': this.UP,
+                'down': this.DOWN,
+                'pagedown': this.DOWN,
+                '+': this.RIGHT,
+                '-': this.LEFT,
             };
             var $clickZones = $('.openerp_webclient_container, ' +
                                 'a.oe_menu_leaf, ' +
@@ -92,10 +94,11 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             if (!this.isOpen){
                 return;
             }
-            if (Object.keys(this.directionCodes).indexOf(e.keyCode.toString()) !== -1) {
+            var directionCode = $.hotkeys.specialKeys[e.keyCode.toString()];
+            if (Object.keys(this.directionCodes).indexOf(directionCode) !== -1) {
                 var $link = this.findAdjacentAppLink(
                     this.$selectedAppLink,
-                    this.directionCodes[e.keyCode]
+                    this.directionCodes[directionCode]
                 );
                 this.selectAppLink($link);
             } else {
