@@ -113,7 +113,10 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             if (this.keyBufferTimeoutEvent) {
                 clearTimeout(this.keyBufferTimeoutEvent);
             }
-            this.keyBufferTimeoutEvent = setTimeout(this.clearKeyBuffer, this.keyBufferTime);
+            this.keyBufferTimeoutEvent = setTimeout(
+                $.proxy(this.clearKeyBuffer, this),
+                this.keyBufferTime
+            );
             return this.keyBuffer;
         },
         
@@ -199,6 +202,10 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
                         obj = $objs[0];
                     }
                     break;
+            }
+            
+            if (obj.length) {
+                event.preventDefault();
             }
             
             return $(obj);
