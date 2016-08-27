@@ -53,7 +53,6 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
         DOWN: 'down',
         
         isOpen: false,
-        $selectedAppLink: $(false),
         keyBuffer: '',
         keyBufferTime: 500,
         keyBufferTimeoutEvent: false,
@@ -97,7 +96,7 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             var directionCode = $.hotkeys.specialKeys[e.keyCode.toString()];
             if (Object.keys(this.directionCodes).indexOf(directionCode) !== -1) {
                 var $link = this.findAdjacentAppLink(
-                    this.$selectedAppLink,
+                    this.$el.find('a:first, a:focus').last(),
                     this.directionCodes[directionCode]
                 );
                 this.selectAppLink($link);
@@ -107,7 +106,9 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             }
         },
         
-        // It adds to keybuffer, sets expire timer, and returns buffer
+        /* It adds to keybuffer, sets expire timer, and returns buffer
+         * @returns str of current buffer
+         */
         handleKeyBuffer: function(keyCode) {
             this.keyBuffer += String.fromCharCode(keyCode);
             if (this.keyBufferTimeoutEvent) {
@@ -124,38 +125,36 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             this.keyBuffer = '';
         },
         
-        // It performs close actions & bubbles a ``drawer.closed`` core.bus event
+        /* It performs close actions
+         * @fires ``drawer.closed`` to the ``core.bus``
+         * @listens ``drawer.opened`` and sends to onDrawerOpen
+         */
         onDrawerClose: function() {
             this.isOpen = false;
-            this.$selectedAppLink = $(false);
             core.bus.trigger('drawer.closed');
             this.$el.one('drawer.opened', $.proxy(this.onDrawerOpen, this));
         },
         
-        // Generate x and y coords for app icons
+        /* It finds app links and register event handlers
+         * @fires ``drawer.opened`` to the ``core.bus``
+         * @listens ``drawer.closed`` and sends to :meth:``onDrawerClose``
+         */
         onDrawerOpen: function() {
             this.isOpen = true;
             this.$appLinks = $('.app-drawer-icon-app').parent();
             this.selectAppLink($(this.$appLinks[0]));
-            this.$appLinks.on('mouseenter', $.proxy(this.selectAppLinkEvent, this));
             this.$el.one('drawer.closed', $.proxy(this.onDrawerClose, this));
             core.bus.trigger('drawer.opened');
-        },
-        
-        // It provides a proxy method allowing for app link select w/ events
-        selectAppLinkEvent: function(event) {
-            this.selectAppLink($(event.currentTarget));
         },
         
         // It selects an app link visibly
         selectAppLink: function($appLink) {
             if ($appLink) {
-                this.$selectedAppLink = $appLink;
                 $appLink.focus();
             }
         },
         
-        /* It searches for app links by name and returns the first match
+        /* It returns first App Link by its name according to query
          * @param query str to search
          * @return jQuery obj
          */
@@ -165,9 +164,9 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             }).first();
         },
         
-        /* Find the link adjacent to $appLink in provided direction
+        /* It returns the link adjacent to $appLink in provided direction
          * @param $appLink jQuery obj of App icon link
-         * @param direction Array for direction to look [int:x, int:y]
+         * @param direction str of direction to go (constants LEFT, UP, etc.)
          * @return jQuery obj for adjacent applink
          */
         findAdjacentAppLink: function($appLink, direction) {
@@ -212,7 +211,7 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             
         },
         
-        /* Return els in the same row
+        /* It returns els in the same row
          * @param @obj jQuery object to get row for
          * @param $grid jQuery objects representing grid
          * @return $objs jQuery objects of row
@@ -233,6 +232,7 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
         
     });
     
+    // It inits a new AppDrawer when the web client is ready
     core.bus.on('web_client_ready', null, function () {
         new AppDrawer();
     });

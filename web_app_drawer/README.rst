@@ -26,6 +26,7 @@ The following keyboard shortcuts are implemented:
 
 * Toggle App Drawer - `ActionKey <https://en.wikipedia.org/wiki/Access_key#Access_in_different_browsers`_+``A``
 * Navigate Apps Drawer - Arrow Keys
+* Type to select App Links
 
 .. image:: https://odoo-community.org/website/image/ir.attachment/5784_f2813bd/datas
    :alt: Try me on Runbot
@@ -37,7 +38,6 @@ Known issues / Roadmap
 * Notification bubble issues - https://github.com/OCA/web/pull/396#issuecomment-242276577
 * Chevron icon to replace x, place in front of ``#appDrawerAppPanelHead>h3``` & remove associated CSS
 * Fix alignment of app icons, col-* classes are hating life here
-* Finish implementing type to select app feature
 * Provide keyboard navigation to secondary (top) menu
 * Drag drawer from left to open in mobile
 
