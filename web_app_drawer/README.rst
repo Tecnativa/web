@@ -35,7 +35,6 @@ The following keyboard shortcuts are implemented:
 Known issues / Roadmap
 ======================
 
-* Notification bubble issues - https://github.com/OCA/web/pull/396#issuecomment-242276577
 * Chevron icon to replace x, place in front of ``#appDrawerAppPanelHead>h3``` & remove associated CSS
 * Fix alignment of app icons, col-* classes are hating life here
 * Provide keyboard navigation to secondary (top) menu
