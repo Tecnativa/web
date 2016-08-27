@@ -108,6 +108,8 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
                     this.directionCodes[directionCode]
                 );
                 this.selectAppLink($link);
+            } else if ($.hotkeys.specialKeys[e.keyCode.toString()] == 'esc') {
+                this.handleClickZones();
             } else {
                 var buffer = this.handleKeyBuffer(e.keyCode);
                 this.selectAppLink(this.searchAppLinks(buffer));
