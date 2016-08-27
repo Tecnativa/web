@@ -45,7 +45,7 @@
                                accesskey="A"
                                >
                                 <span class="sr-only">Toggle Navigation</span>
-                                <i class="fa fa-th fa-2x app-drawer-icon-open" />
+                                <i class="fa fa-th app-drawer-icon-open" />
                             </a>
                             
                             <button type="button"
@@ -219,7 +219,7 @@
                 </div>
                 <div class="panel-body" id="appDrawerAppPanelBody">
                     <ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
-                        <li t-foreach="menu_data['children']" t-as="menu">
+                        <li t-foreach="menu_data['children']" t-as="menu" class="col-sm-12 col-md-3 col-lg-2 text-center">
                             <t t-call="web.menu_link">
                                 <t t-set="display_images" t-value="1" />
                             </t>

@@ -35,7 +35,7 @@ The following keyboard shortcuts are implemented:
 Known issues / Roadmap
 ======================
 
-* Fix alignment of app icons, col-* classes are hating life here
+* Implement scrollable dropdown (requires jQuery height)
 * Provide keyboard navigation to secondary (top) menu
 * Drag drawer from left to open in mobile
 

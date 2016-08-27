@@ -3,26 +3,24 @@
 
 .main-nav {
     margin-bottom: 0;
-    min-height: @navbar-height;
+    min-height: @app-drawer-navbar-height;
 }
 
 .main-nav ul.nav > li > a {
-    padding: @navbar-padding-vertical @navbar-padding-horizontal;
-    height: @navbar-height;
+    padding: @app-drawer-navbar-padding-vertical @app-drawer-padding-horizontal;
 }
 
 .oe_topbar_avatar {
-    margin-top: -@navbar-padding-horizontal;
-    height: @navbar-height;
+    margin-top: -@app-drawer-padding-horizontal;
+    height: @app-drawer-navbar-height;
     border-radius: 50%;
 }
 
-.navbar-collapse, .navbar-toggle {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    height: @navbar-height;
+a.navbar-collapse.collapse {
+    @media (min-width: @screen-sm) {
+        padding-bottom: @app-drawer-navbar-padding-vertical;
+        padding-top: @app-drawer-navbar-padding-vertical;
+    }
 }
 
 .dropdown-scrollable {
@@ -32,7 +30,7 @@
 
 .badge {
     position: absolute;
-    right: @navbar-padding-horizontal;
+    right: @app-drawer-padding-horizontal;
 }
 
 @media (max-width: @screen-sm - 1px) {
