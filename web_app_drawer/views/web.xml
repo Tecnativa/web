@@ -131,7 +131,6 @@
                             <t t-call="web.menu_secondary_submenu">
                                 <t t-set="submenu" t-value="True" />
                             </t>
-                            <li role="separator" class="divider" />
                         </t>
                         <t t-if="not submenu">
                             <a href="#"

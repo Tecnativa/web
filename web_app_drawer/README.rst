@@ -35,7 +35,6 @@ The following keyboard shortcuts are implemented:
 Known issues / Roadmap
 ======================
 
-* Implement scrollable dropdown (requires jQuery height)
 * Provide keyboard navigation to secondary (top) menu
 * Drag drawer from left to open in mobile
 

@@ -76,6 +76,7 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
                                 );
             $clickZones.click($.proxy(this.handleClickZones, this));
             this.$el.one('drawer.opened', $.proxy(this.onDrawerOpen, this));
+            core.bus.on('resize', this, this.handleWindowResize);
             // Core bus keypress doesn't seem to send arrow keys
             core.bus.on('keydown', this, this.handleNavKeys);
         },
@@ -86,6 +87,13 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             $('.oe_secondary_menus_container')
                 .parent()
                 .collapse('hide');
+        },
+        
+        // It resizes bootstrap dropdowns for screen
+        handleWindowResize: function() {
+            $('.dropdown-scrollable').css(
+                'max-height', $(window).height() * 0.90
+            );
         },
         
         // It provides keyboard shortcuts for app drawer nav
