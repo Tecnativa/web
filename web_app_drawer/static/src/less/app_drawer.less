@@ -17,6 +17,10 @@
     float: none;
 }
 
+.app-drawer-panel-title {
+    margin-top: 4px;
+}
+
 .app-drawer-icon-app {
     height: @app-drawer-icon-size;
     width: @app-drawer-icon-size;
@@ -56,27 +60,6 @@
 
 .app-drawer-toggle {
     background-color: transparent;
-}
-
-.drawer .app-drawer-icon-close {
-    display: none;
-    height: @app-drawer-title-height;
-}
-
-.drawer--left.drawer-open .app-drawer-icon-close {
-    display: block;
-    position: fixed;
-    z-index: 9000;
-    left: @app-drawer-width;
-    top: 0;
-}
-
-.drawer--right.drawer-open .app-drawer-icon-close {
-    display: block;
-    position: fixed;
-    z-index: 9000;
-    left: -@app-drawer-width;
-    top: 0;
 }
 
 .app-drawer-toggle.navbar-toggle {

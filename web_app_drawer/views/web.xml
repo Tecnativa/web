@@ -55,10 +55,6 @@
                                 <i class="fa fa-th fa-2x app-drawer-icon-open" />
                             </button>
                             
-                            <a href="#" class="app-drawer-icon-close btn btn-danger">
-                                <i class="fa fa-times fa-2x drawer-toggle" />
-                            </a>
-                            
                             <button type="button"
                                     id="odooMenuBarToggle"
                                     class="navbar-toggle collapsed pull-right"
@@ -214,9 +210,12 @@
             
             <div class="panel-default app-drawer-app-panel" id="appDrawerAppMenu">
                 <div class="panel-heading" id="appDrawerAppPanelHead">
-                    <h3 class="panel-title">
+                    <h4 class="app-drawer-panel-title">
+                        <a href="#" class="app-drawer-icon-close">
+                            <i class="fa fa-chevron-left drawer-toggle" />
+                        </a>
                         Apps
-                    </h3>
+                    </h4>
                 </div>
                 <div class="panel-body" id="appDrawerAppPanelBody">
                     <ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
