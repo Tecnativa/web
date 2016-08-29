@@ -210,10 +210,10 @@
             <div class="panel-default app-drawer-app-panel" id="appDrawerAppMenu">
                 <div class="panel-heading" id="appDrawerAppPanelHead">
                     <h4 class="app-drawer-panel-title">
-                        <a href="#" class="app-drawer-icon-close">
-                            <i class="fa fa-chevron-left drawer-toggle" />
+                        <a href="#" class="app-drawer-icon-close drawer-toggle">
+                            <i class="fa fa-chevron-left" />
+                            Apps
                         </a>
-                        Apps
                     </h4>
                 </div>
                 <div class="panel-body" id="appDrawerAppPanelBody">
