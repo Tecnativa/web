@@ -60,6 +60,7 @@ Contributors
 ------------
 
 * Dave Lasley <dave@laslabs.com>
+* Jairo Llopis <jairo.llopis@tecnativa.com>
 
 Maintainer
 ----------
