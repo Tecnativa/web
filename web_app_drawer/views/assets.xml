@@ -36,4 +36,11 @@
                     />
         </xpath>
     </template>
+    <template id="qunit_suite" inherit_id="web.qunit_suite">
+        <xpath expr="//html/head" position="inside">
+            <script type="application/javascript"
+                    src="/web_app_drawer/static/tests/js/web_app_drawer.js"
+                    />
+        </xpath>
+    </template>
 </odoo>

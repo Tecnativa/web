@@ -38,6 +38,7 @@ Known issues / Roadmap
 
 * Provide keyboard navigation to secondary (top) menu
 * Drag drawer from left to open in mobile
+* Figure out how to test focus on hidden elements for keyboard nav tests
 
 Bug Tracker
 ===========

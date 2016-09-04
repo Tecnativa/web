@@ -1,7 +1,7 @@
 /* Copyright 2016 LasLabs Inc.
  * License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl). */
 
-odoo.define('web_app_drawer.AppDrawer', function(require) {
+odoo.define('web_app_drawer', function(require) {
     'use strict';
     
     var $ = require('$');
@@ -56,6 +56,8 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
         keyBuffer: '',
         keyBufferTime: 500,
         keyBufferTimeoutEvent: false,
+        dropdownHeightFactor: 0.90,
+        initialized: false,
         
         init: function() {
             this.$el = $('.drawer');
@@ -79,6 +81,7 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             core.bus.on('resize', this, this.handleWindowResize);
             // Core bus keypress doesn't seem to send arrow keys
             core.bus.on('keydown', this, this.handleNavKeys);
+            this.initialized = true;
         },
         
         // It provides handlers to hide drawer when "unfocused"
@@ -92,7 +95,7 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
         // It resizes bootstrap dropdowns for screen
         handleWindowResize: function() {
             $('.dropdown-scrollable').css(
-                'max-height', $(window).height() * 0.90
+                'max-height', $(window).height() * this.dropdownHeightFactor
             );
         },
         
@@ -174,7 +177,14 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
             }).first();
         },
         
-        /* It returns the link adjacent to $appLink in provided direction
+        /* It returns the link adjacent to $appLink in provided direction.
+         * It also handles edge cases in the following ways:
+         *   * Moves to last link if LEFT on first
+         *   * Moves to first link if PREV on last
+         *   * Moves to first link of following row if RIGHT on last in row
+         *   * Moves to last link of previous row if LEFT on first in row
+         *   * Moves to top link in same column if DOWN on bottom row
+         *   * Moves to bottom link in same column if UP on top row
          * @param $appLink jQuery obj of App icon link
          * @param direction str of direction to go (constants LEFT, UP, etc.)
          * @return jQuery obj for adjacent applink
@@ -247,6 +257,10 @@ odoo.define('web_app_drawer.AppDrawer', function(require) {
         new AppDrawer();
     });
     
-    return AppDrawer;
+    return {
+        'AppDrawer': AppDrawer,
+        'SearchView': SearchView,
+        'Menu': Menu,
+    };
     
 });
