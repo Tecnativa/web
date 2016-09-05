@@ -11,20 +11,33 @@
     border-radius: @border-radius-base;
     .box-shadow(0 6px 12px rgba(0, 0, 0, .175));
     background-clip: padding-box;
-}
 
-.app-drawer-title {
-    float: none;
-}
+    .navbar-left {
+        
+        li {
+            padding: 0;
+        }
+        
+    }
+    
+    .app-drawer-title {
+        float: none;
+    }
+    
+    .app-drawer-panel-title {
+        margin-top: 4px;
+    }
+    
+    .app-drawer-icon-app {
+        height: @app-drawer-icon-size;
+        width: @app-drawer-icon-size;
+        margin: @app-drawer-icon-margin;
+    }
 
-.app-drawer-panel-title {
-    margin-top: 4px;
-}
-
-.app-drawer-icon-app {
-    height: @app-drawer-icon-size;
-    width: @app-drawer-icon-size;
-    margin: @app-drawer-icon-margin;
+    #appDrawerAppPanelHead {
+        height: @app-drawer-title-height;
+    }
+    
 }
 
 .drawer-nav {
@@ -50,10 +63,6 @@
 
 .drawer-closed .oe-right-toolbar {
     display: block;
-}
-
-#appDrawerAppPanelHead {
-    height: @app-drawer-title-height;
 }
 
 /* App Drawer Toggle */
