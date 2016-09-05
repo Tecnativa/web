@@ -44,15 +44,15 @@
                                class="drawer-toggle pull-left navbar-collapse collapse btn btn-default app-drawer-toggle"
                                accesskey="A"
                                >
-                                <span class="sr-only">Toggle Navigation</span>
-                                <i class="fa fa-th app-drawer-icon-open" />
+                                <span class="sr-only">Toggle App Drawer</span>
+                                <i class="fa fa-th fa-lg app-drawer-icon-open" />
                             </a>
                             
                             <button type="button"
                                     class="app-drawer-toggle drawer-toggle pull-left navbar-toggle collapsed"
                                     >
-                                <span class="sr-only">Toggle Navigation</span>
-                                <i class="fa fa-th fa-2x app-drawer-icon-open" />
+                                <span class="sr-only">Toggle App Drawer</span>
+                                <i class="fa fa-th fa-lg app-drawer-icon-open" />
                             </button>
                             
                             <button type="button"
@@ -62,7 +62,7 @@
                                     data-target="#odooMenuBarNav"
                                     >
                                 <span class="sr-only">Toggle Navigation</span>
-                                <i class="fa fa-bars fa-2x" />
+                                <i class="fa fa-bars fa-lg" />
                             </button>
                             
                         </div>
@@ -211,7 +211,7 @@
                 <div class="panel-heading" id="appDrawerAppPanelHead">
                     <h4 class="app-drawer-panel-title">
                         <a href="#" class="app-drawer-icon-close drawer-toggle">
-                            <i class="fa fa-chevron-left" />
+                            <i class="fa fa-lg fa-chevron-left" />
                             Apps
                         </a>
                     </h4>
