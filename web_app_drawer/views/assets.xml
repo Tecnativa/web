@@ -26,7 +26,7 @@
                   href="/web_app_drawer/static/src/less/variables.less"
                   />
             <script type="application/javascript"
-                    src="/web_app_drawer/static/lib/js/iscroll.5.2.0.js"
+                    src="/web_app_drawer/static/lib/js/iscroll-probe.5.2.0.js"
                     />
             <script type="application/javascript"
                     src="/web_app_drawer/static/lib/js/drawer.3.2.0.js"

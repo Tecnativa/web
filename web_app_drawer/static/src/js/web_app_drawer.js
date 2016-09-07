@@ -60,8 +60,6 @@ odoo.define('web_app_drawer', function(require) {
         initialized: false,
         
         init: function() {
-            this.$el = $('.drawer');
-            this.$el.drawer();
             this.directionCodes = {
                 'left': this.LEFT,
                 'right': this.RIGHT,
@@ -72,15 +70,22 @@ odoo.define('web_app_drawer', function(require) {
                 '+': this.RIGHT,
                 '-': this.LEFT,
             };
+            this.initDrawer();
             var $clickZones = $('.openerp_webclient_container, ' +
                                 'a.oe_menu_leaf, ' +
                                 'a.oe_menu_toggler'
                                 );
             $clickZones.click($.proxy(this.handleClickZones, this));
-            this.$el.one('drawer.opened', $.proxy(this.onDrawerOpen, this));
             core.bus.on('resize', this, this.handleWindowResize);
-            // Core bus keypress doesn't seem to send arrow keys
             core.bus.on('keydown', this, this.handleNavKeys);
+        },
+        
+        // It provides initialization handlers for Drawer
+        initDrawer: function() {
+            this.$el = $('.drawer');
+            this.$el.drawer().drawer('refresh');
+            this.$el.one('drawer.opened', $.proxy(this.onDrawerOpen, this));
+            
             this.initialized = true;
         },
         
@@ -143,9 +148,9 @@ odoo.define('web_app_drawer', function(require) {
          * @listens ``drawer.opened`` and sends to onDrawerOpen
          */
         onDrawerClose: function() {
-            this.isOpen = false;
             core.bus.trigger('drawer.closed');
             this.$el.one('drawer.opened', $.proxy(this.onDrawerOpen, this));
+            this.isOpen = false;
         },
         
         /* It finds app links and register event handlers
@@ -153,14 +158,30 @@ odoo.define('web_app_drawer', function(require) {
          * @listens ``drawer.closed`` and sends to :meth:``onDrawerClose``
          */
         onDrawerOpen: function() {
-            this.isOpen = true;
             this.$appLinks = $('.app-drawer-icon-app').parent();
             this.selectAppLink($(this.$appLinks[0]));
             this.$el.one('drawer.closed', $.proxy(this.onDrawerClose, this));
+            this.setIScrollProbes();
             core.bus.trigger('drawer.opened');
+            this.isOpen = true;
         },
         
-        // It selects an app link visibly
+        // It sets the iScroll event handlers and probe type
+        setIScrollProbes: function() {
+            this.$el.iScroll.options.probeType = 2;
+            this.$el.iScroll.on('scroll', $.proxy(this.onIScroll, this));
+            this.$el.iScroll.on('scrollEnd', $.proxy(this.onIScroll, this));
+        },
+        
+        // It handles the iScroll Scroll events
+        onIScroll: function() {
+            var transform = (this.$el.iScroll.y) ? this.$el.iScroll.y * -1 : 0;
+            this.$el.find('#appDrawerAppPanelHead').css(
+                'transform', 'translate(0px, ' + transform + 'px)'
+            );
+        },
+        
+        // It selects an app link visibly    
         selectAppLink: function($appLink) {
             if ($appLink) {
                 $appLink.focus();

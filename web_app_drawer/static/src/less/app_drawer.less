@@ -33,9 +33,16 @@
         width: @app-drawer-icon-size;
         margin: @app-drawer-icon-margin;
     }
+    
+    .panel-body {
+        padding-top: @app-drawer-title-height;
+    }
 
     #appDrawerAppPanelHead {
+        position: absolute;
         height: @app-drawer-title-height;
+        width: 100%;
+        z-index: 9999;
     }
     
 }

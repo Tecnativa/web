@@ -16,6 +16,9 @@ odoo.define_section('web_app_drawer', ['web_app_drawer'], function(test) {
                 .append(
                     $('<nav class="drawer-nav"><ul class="drawer-menu"><li class="drawer-menu-item">')
                 )
+                .append(
+                    $('<div class="panel-title" id="appDrawerAppPanelHead">')
+                )
         ).append($('<main role="main">'));
         
         self.$clickZone = $('<a class="oe_menu_leaf">');
@@ -269,6 +272,20 @@ odoo.define_section('web_app_drawer', ['web_app_drawer'], function(test) {
                     $appLink, self.drawer.DOWN
                 );
             assert.equal($res[0].id, $expect[0].id);
+         }
+    );
+    
+    test('It should move the panel header to negative iScroll.y',
+         function(assert, AppDrawer) {
+            self.initInterface(AppDrawer);
+            self.drawer.onDrawerOpen();
+            self.drawer.iScroll.y = -100;
+            self.drawer.iScroll.trigger('scroll');
+            var $header = $('#appDrawerAppPanelHead');
+            assert.equal(
+                'translate(0px, 100px)',
+                $header.css('transform')
+            );
          }
     );
     
