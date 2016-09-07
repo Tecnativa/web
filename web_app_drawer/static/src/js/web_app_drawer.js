@@ -177,7 +177,7 @@ odoo.define('web_app_drawer', function(require) {
         onIScroll: function() {
             var transform = (this.$el.iScroll.y) ? this.$el.iScroll.y * -1 : 0;
             this.$el.find('#appDrawerAppPanelHead').css(
-                'transform', 'translate(0px, ' + transform + 'px)'
+                'transform', 'matrix(1, 0, 0, 1, 0, ' + transform + ')'
             );
         },
         

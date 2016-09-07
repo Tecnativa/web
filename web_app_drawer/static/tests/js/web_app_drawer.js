@@ -278,13 +278,12 @@ odoo.define_section('web_app_drawer', ['web_app_drawer'], function(test) {
     test('It should move the panel header to negative iScroll.y',
          function(assert, AppDrawer) {
             self.initInterface(AppDrawer);
-            self.drawer.onDrawerOpen();
-            self.drawer.iScroll.y = -100;
-            self.drawer.iScroll.trigger('scroll');
+            self.drawer.$el.iScroll.y = -200;
+            self.drawer.onIScroll();
             var $header = $('#appDrawerAppPanelHead');
             assert.equal(
-                'translate(0px, 100px)',
-                $header.css('transform')
+                $header.css('transform'),
+                'matrix(1, 0, 0, 1, 0, 200)'
             );
          }
     );
