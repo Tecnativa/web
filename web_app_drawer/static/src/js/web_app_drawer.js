@@ -83,9 +83,18 @@ odoo.define('web_app_drawer', function(require) {
         // It provides initialization handlers for Drawer
         initDrawer: function() {
             this.$el = $('.drawer');
-            this.$el.drawer().drawer('refresh');
+            this.$el.drawer();
             this.$el.one('drawer.opened', $.proxy(this.onDrawerOpen, this));
-            
+            this.$el.on('drawer.opened', function setIScrollProbes(){
+                var onIScroll = function() {
+                    var transform = (this.iScroll.y) ? this.iScroll.y * -1 : 0;
+                    $(this).find('#appDrawerAppPanelHead').css(
+                        'transform', 'matrix(1, 0, 0, 1, 0, ' + transform + ')'
+                    );
+                };
+                this.iScroll.options.probeType = 2;
+                this.iScroll.on('scroll', $.proxy(onIScroll, this));
+            });
             this.initialized = true;
         },
         
@@ -161,24 +170,8 @@ odoo.define('web_app_drawer', function(require) {
             this.$appLinks = $('.app-drawer-icon-app').parent();
             this.selectAppLink($(this.$appLinks[0]));
             this.$el.one('drawer.closed', $.proxy(this.onDrawerClose, this));
-            this.setIScrollProbes();
             core.bus.trigger('drawer.opened');
             this.isOpen = true;
-        },
-        
-        // It sets the iScroll event handlers and probe type
-        setIScrollProbes: function() {
-            this.$el.iScroll.options.probeType = 2;
-            this.$el.iScroll.on('scroll', $.proxy(this.onIScroll, this));
-            this.$el.iScroll.on('scrollEnd', $.proxy(this.onIScroll, this));
-        },
-        
-        // It handles the iScroll Scroll events
-        onIScroll: function() {
-            var transform = (this.$el.iScroll.y) ? this.$el.iScroll.y * -1 : 0;
-            this.$el.find('#appDrawerAppPanelHead').css(
-                'transform', 'matrix(1, 0, 0, 1, 0, ' + transform + ')'
-            );
         },
         
         // It selects an app link visibly    
