@@ -11,10 +11,22 @@ odoo.define('web_app_drawer', function(require) {
     var core = require('web.core');
     
     Menu.include({
+        
         // Force all_outside to prevent app icons from going into more menu
         reflow: function() {
             this._super('all_outside');
         },
+        
+        /* Overload to collapse unwanted visible submenus
+         * @param allow_open bool Switch to allow submenus to be opened
+         */
+        open_menu: function(id, allowOpen) {
+            this._super(id);
+            if (allowOpen) return;
+            var $clicked_menu = this.$secondary_menus.find('a[data-menu=' + id + ']');
+            $clicked_menu.parents('.oe_secondary_submenu').css('display', '');
+        },
+        
     });
     
     SearchView.include({
