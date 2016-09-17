@@ -180,12 +180,9 @@
                      t-att-alt="menu['name']"
                      t-att-title="menu['name']"
                      />
-                <span class="app-drawer-title text-left navbar-toggle collapsed">
+                <p class="app-drawer-title text-center">
                     <t t-esc="menu['name']" />
-                </span>
-                <span class="app-drawer-title text-center collapse navbar-collapse">
-                    <t t-esc="menu['name']" />
-                </span>
+                </p>
             </t>
             <t t-if="not display_images">
                 <span class="oe_menu_text">
@@ -218,7 +215,7 @@
                 </div>
                 <div class="panel-body" id="appDrawerAppPanelBody">
                     <ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
-                        <li t-foreach="menu_data['children']" t-as="menu" class="col-sm-12 col-md-3 col-lg-2 text-center">
+                        <li t-foreach="menu_data['children']" t-as="menu" class="col-xs-6 col-sm-4 col-md-3 col-lg-2 text-center">
                             <t t-call="web.menu_link">
                                 <t t-set="display_images" t-value="1" />
                             </t>
