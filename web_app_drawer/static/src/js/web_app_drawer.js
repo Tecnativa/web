@@ -172,6 +172,8 @@ odoo.define('web_app_drawer', function(require) {
             core.bus.trigger('drawer.closed');
             this.$el.one('drawer.opened', $.proxy(this.onDrawerOpen, this));
             this.isOpen = false;
+            // Remove inline style inserted by drawer.js
+            this.$el.css("overflow", "");
         },
 
         /* It finds app links and register event handlers

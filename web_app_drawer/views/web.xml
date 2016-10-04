@@ -41,7 +41,7 @@
                         <div class="navbar-header">
 
                             <a href="#"
-                               class="drawer-toggle pull-left navbar-collapse collapse btn btn-default app-drawer-toggle"
+                               class="drawer-toggle navbar-collapse collapse btn btn-default app-drawer-toggle"
                                accesskey="A"
                                >
                                 <span class="sr-only">Toggle App Drawer</span>
@@ -52,7 +52,7 @@
                                     class="app-drawer-toggle drawer-toggle pull-left navbar-toggle collapsed"
                                     >
                                 <span class="sr-only">Toggle App Drawer</span>
-                                <i class="fa fa-th fa-lg app-drawer-icon-open" />
+                                <div class="fa fa-th fa-lg app-drawer-icon-open" />
                             </button>
 
                             <button type="button"
@@ -214,8 +214,10 @@
                     </h4>
                 </div>
                 <div class="panel-body" id="appDrawerAppPanelBody">
-                    <ul class="nav navbar-nav navbar-left oe_application_menu_placeholder" style="display: none;">
-                        <li t-foreach="menu_data['children']" t-as="menu" class="col-xs-6 col-sm-4 col-md-3 col-lg-2 text-center">
+                    <ul class="row list-unstyled oe_application_menu_placeholder"
+                        style="display: none;">
+                        <li t-foreach="menu_data['children']" t-as="menu"
+                            class="col-xs-6 col-sm-4 col-md-3 col-lg-2 text-center mt16">
                             <t t-call="web.menu_link">
                                 <t t-set="display_images" t-value="1" />
                             </t>

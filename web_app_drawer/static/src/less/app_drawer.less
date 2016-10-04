@@ -29,9 +29,12 @@
     }
 
     .app-drawer-icon-app {
-        height: @app-drawer-icon-size;
-        width: @app-drawer-icon-size;
-        margin: @app-drawer-icon-margin;
+        height: 100%;
+        width: 100%;
+        max-width: @app-drawer-icon-size;
+        max-height: @app-drawer-icon-size;
+        object-fit: contain;
+        object-position: center;
     }
 
     .panel-body {
