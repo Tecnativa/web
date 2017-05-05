@@ -1,11 +1,13 @@
 .. image:: https://img.shields.io/badge/licence-AGPL--3-blue.svg
-    :alt: License: AGPL-3
+   :target: http://www.gnu.org/licenses/agpl-3.0-standalone.html
+   :alt: License: AGPL-3
 
 ===============================
 Tags widget for one2many fields
 ===============================
 
-This module adds a widget ``one2many_tags`` that looks and behaves like ``many2many_tags``, but works for one2many fields.
+This module adds a widget ``one2many_tags`` that looks and behaves like
+``many2many_tags``, but works for one2many fields.
 
 Usage
 =====
@@ -14,19 +16,16 @@ To use this module, use ``widget="one2many_tags"`` on your field element.
 
 .. image:: https://odoo-community.org/website/image/ir.attachment/5784_f2813bd/datas
     :alt: Try me on Runbot
-    :target: https://runbot.odoo-community.org/runbot/162/8.0
+    :target: https://runbot.odoo-community.org/runbot/162/9.0
 
-For further information, please visit:
-
-* https://www.odoo.com/forum/help-1
 
 Bug Tracker
 ===========
 
-Bugs are tracked on `GitHub Issues <https://github.com/OCA/web/issues>`_.
-In case of trouble, please check there if your issue has already been reported.
-If you spotted it first, help us smashing it by providing a detailed and welcomed feedback
-`here <https://github.com/OCA/web/issues/new?body=module:%20web_widget_one2many_tags%0Aversion:%208.0%0A%0A**Steps%20to%20reproduce**%0A-%20...%0A%0A**Current%20behavior**%0A%0A**Expected%20behavior**>`_.
+Bugs are tracked on `GitHub Issues <https://github.com/OCA/web/issues>`_. In
+case of trouble, please check there if your issue has already been reported.
+If you spotted it first, help us smash it by providing detailed and welcomed
+feedback.
 
 Known issues / Roadmap
 ======================
@@ -47,6 +46,7 @@ Contributors
 * Holger Brunn <hbrunn@therp.nl>
 * Iván Todorovich <ivan.todorovich@gmail.com>
 * Peter Hahn <peter.hahn@initos.com>
+* Vicent Cubells <vicent.cubells@tecnativa.com>
 
 Maintainer
 ----------

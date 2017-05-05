@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
-# © 2016 Therp BV <http://therp.nl>
+# Copyright 2016 Therp BV <http://therp.nl>
+# Copyright 2017 Tecnativa - Vicent Cubells
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 {
     "name": "Tags widget for one2many fields",
-    "version": "8.0.1.0.0",
-    "author": "Therp BV,Odoo Community Association (OCA)",
+    "version": "9.0.1.0.0",
+    "author": "Therp BV, "
+              "Tecnativa, "
+              "Odoo Community Association (OCA)",
     "license": "AGPL-3",
     "category": "Hidden/Dependency",
     "summary": "Provides a widget similar to many2many_tags for one2many "
-    "fields",
+                "fields",
     "depends": [
         'web',
     ],

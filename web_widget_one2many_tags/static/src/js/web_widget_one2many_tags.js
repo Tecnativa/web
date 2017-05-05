@@ -1,212 +1,128 @@
 //-*- coding: utf-8 -*-
-//© 2016 Therp BV <http://therp.nl>
+//Copyright 2016 Therp BV <http://therp.nl>
 //License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-openerp.web_widget_one2many_tags = function(instance)
-{
-    instance.web_widget_one2many_tags.FieldOne2ManyTags =
-    instance.web.form.FieldOne2Many.extend(instance.web.form.ReinitializeFieldMixin, {
+odoo.define('web.web_widget_one2many_tags', function (require) {
+    "use strict";
+
+    var core = require('web.core');
+    var FieldOne2Many = core.form_widget_registry.get('one2many');
+    var common = require('web.form_common');
+    var QWeb = core.qweb;
+
+    var FieldOne2ManyTags = FieldOne2Many.extend({
         template: "FieldOne2ManyTags",
         tag_template: "FieldOne2ManyTag",
-        disable_utility_classes: false,
-        initialize_texttext: function()
-        {
-            var self = this;
-            return {
-                plugins: 'tags arrow filter',
-                ext: {
-                    itemManager: {
-                        itemToString: function(item) {
-                            return item.name;
-                        },
-                    },
-                    arrow: {
-                        onArrowClick: function(e)
-                        {
-                            var list_view = new instance.web.form.One2ManyListView(
-                                self, self.dataset);
-                            list_view.o2m = self;
-                            list_view.editable = function() { return false };
-                            list_view.do_add_record();
-                        },
-                    },
-                    tags: {
-                        isTagAllowed: function(tag) {
-                            return tag.name;
-                        },
-                        removeTag: function(tag)
-                        {
-                            self.dataset.unlink([tag.data('id')]);
-                            return $.fn.textext.TextExtTags.prototype.removeTag
-                                .call(this, tag);
-                        },
-                        renderTag: function(tag) {
-                            return $.fn.textext.TextExtTags.prototype.renderTag
-                                .call(this, tag).data("id", tag.id);
-                        },
-                    },
-                },
-                filter: {
-                    items: []
-                },
-            };
+
+        events: {
+            'click .o_delete': function(e) {
+                this.remove_id($(e.target).parent().data('id'));
+            }
         },
-        build_context: function()
-        {
-            var context = this._super.apply(this, arguments),
-                key = _.str.sprintf('default_%s', this.field.relation_field);
-            if(this.field_manager.datarecord.id)
-            {
-                context.add({[key]: this.field_manager.datarecord.id});
-            }
-            return context;
+
+        init: function(field_manager, node) {
+            this._super(field_manager, node);
+            common.CompletionFieldMixin.init.call(this);
+            this.set({"value": []});
         },
-        reload_current_view: function()
-        {
+        willStart: function () {
             var self = this;
-            if(!self.$el.length)
-            {
-                return jQuery.when();
-            }
-            if(!self.get("effective_readonly"))
-            {
-                self.ignore_blur = false;
-                if(self.tags)
-                {
-                    self.tags.tagElements().remove();
-                }
-                if(!self.$text || !self.$text.length)
-                {
-                    self.$text = this.$("textarea");
-                    self.$text.textext(self.initialize_texttext());
-                    self.$text.bind('tagClick', function(e, tag, value, callback)
-                    {
-                        var list_view = new instance.web.form.One2ManyViewManager(
-                            self, self.dataset);
-                        list_view.o2m = self;
-                        self.dataset.select_id(value.id);
-                        list_view.switch_mode('form');
-                    });
-                }
-                if(self.$text.textext().length)
-                {
-                    self.tags = self.$text.textext()[0].tags();
-                }
-            }
-            else
-            {
-                self.tags = null;
-                self.$text = null;
-            }
-            return self.dataset.read_ids(self.dataset.ids, ['display_name'])
-            .then(function(names)
-            {
-                if(self.get("effective_readonly"))
-                {
-                    self.$el.html(instance.web.qweb.render(
-                        self.tag_template,
-                        {
-                            elements: _(names).map(function(name)
-                            {
-                                return [name.id, name.display_name];
-                            })
-                        }
-                    ));
-                }
-                else if(self.$text.textext().length)
-                {
-                    self.tags.addTags(_(names).map(function(name)
-                    {
-                        return {
-                            name: name.display_name || instance.web._t('New record'),
-                            id: name.id,
-                        }
-                    }));
-                }
+            return this.dataset.call('fields_get', []).then(function(fields) {
+                self.fields = fields;
             });
         },
-        reinitialize: function()
-        {
-            var result = instance.web.form.ReinitializeFieldMixin.reinitialize.call(this);
-            this.reload_current_view();
-            return result;
+        commit_value: function() {
+            this.dataset.cancel_read();
+            return this._super();
         },
-        // defuse some functions we don't need
-        get_active_view: function()
-        {
+        initialize_content: function() {
+            if(!this.get("effective_readonly")) {
+                this.one2many = new FieldOne2Many(this.field_manager, this.node);
+                this.one2many.options.no_open = true;
+                this.one2many.on('changed_value', this, function() {
+                    var newValue = this.one2many.get('value');
+                    if(newValue) {
+                        this.add_id(newValue);
+                        this.one2many.set({'value': false});
+                    }
+                });
+
+                this.one2many.prependTo(this.$el);
+
+                var self = this;
+                this.one2many.$('input').on('keydown', function(e) {
+                    if(!$(e.target).val() && e.which === 8) {
+                        var $badges = self.$('.badge');
+                        if($badges.length) {
+                            self.remove_id($badges.last().data('id'));
+                        }
+                    }
+                });
+                this.one2many.get_search_blacklist = function () {
+                    return self.get('value');
+                };
+            }
+        },
+        destroy_content: function() {
+            if(this.one2many) {
+                this.one2many.destroy();
+                this.one2many = undefined;
+            }
+        },
+        get_render_data: function(ids){
+            var self = this;
+            this.dataset.cancel_read();
+            var fields = ['name'];
+            return this.dataset.read_ids(ids, fields);
+        },
+        render_tag: function(data) {
+            this.$('.badge').remove();
+            this.$el.prepend(QWeb.render(this.tag_template, {elements: data, readonly: this.get('effective_readonly')}));
+        },
+        render_value: function() {
+            var self = this;
+            var values = self.get("value");
+            var handle_names = function(data) {
+                if (self.isDestroyed())
+                    return;
+                var indexed = {};
+                _.each(data, function(el) {
+                    indexed[el['id']] = el;
+                });
+                data = _.map(values, function(el) { return indexed[el]; });
+                self.render_tag(data);
+            };
+            if (!values || values.length > 0) {
+                return self.get_render_data(values).done(handle_names);
+            } else {
+                handle_names([]);
+            }
+        },
+        add_id: function(id) {
+            this.set({'value': _.uniq(this.get('value').concat([id]))});
+        },
+        remove_id: function(id) {
+            this.set({'value': _.without(this.get("value"), id)});
+        },
+        focus: function () {
+            if(!this.get("effective_readonly")) {
+                return this.one2many.focus();
+            }
             return false;
         },
-        load_views: function()
-        {
-            return jQuery.when();
-        },
-    });
-
-    instance.web.form.widgets.add(
-        'one2many_tags',
-        'instance.web_widget_one2many_tags.FieldOne2ManyTags'
-    );
-
-    instance.web.list.One2ManyTags = instance.web.list.Column.extend({
-        _format: function (row_data, options)
-        {
-            if(!_.isEmpty(row_data[this.id].value) && row_data[this.id + '__display'])
-            {
-                row_data[this.id] = row_data[this.id + '__display'];
+        set_dimensions: function (height, width) {
+            this._super(height, width);
+            var $input = this.$('input');
+            if (!this.get("effective_readonly") && $input) {
+                $input.css('height', height);
             }
-            return this._super(row_data, options);
-        },
+        }
     });
+    core.form_widget_registry
+        .add('one2many_tags', FieldOne2ManyTags);
 
-    instance.web.list.columns.add(
-        'field.one2many_tags',
-        'instance.web.list.One2ManyTags'
-    );
+    return {
+        FieldOne2ManyTags: FieldOne2ManyTags
+    };
 
-    instance.web.ListView.List.include({
-        render_cell: function (record, column)
-        {
-            if(column.widget == 'one2many_tags')
-            {
-                var dataset = new instance.web.form.One2ManyDataSet(
-                        this, column.relation),
-                    fake_widget = {
-                        dataset: dataset,
-                        trigger_on_change: function() {},
-                        get_active_view: function () {},
-                        _super: function() {},
-                        set: function() {},
-                        build_context: function()
-                        {
-                            return new instance.web.CompoundContext(
-                                column.context
-                            );
-                        },
-                    },
-                    value = record.get(column.id);
-                dataset.o2m = fake_widget;
-                openerp.web_widget_one2many_tags.FieldOne2ManyTags
-                    .prototype.set_value.apply(fake_widget, [value])
-                dataset.read_ids(dataset.ids, ['display_name'])
-                .then(function(names) {
-                    if(!names.length)
-                    {
-                        return;
-                    }
-                    record.set(
-                        column.id + '__display',
-                        _(names)
-                            .map(function(name)
-                            {
-                                return name.display_name ||
-                                    instance.web._t('New record');
-                            })
-                            .join(', ')
-                    );
-                });
-                column = _(column).extend({type: 'one2many_tags'});
-            }
-            return this._super(record, column);
-        },
-    });
-}
+});
