@@ -1,34 +1,39 @@
 //-*- coding: utf-8 -*-
-//© 2016 Therp BV <http://therp.nl>
+// Copyright 2016 Therp BV <http://therp.nl>
 //License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-openerp.web_widget_one2many_tags = function(instance)
-{
-    instance.web_widget_one2many_tags.FieldOne2ManyTags =
-    instance.web.form.FieldOne2Many.extend(instance.web.form.ReinitializeFieldMixin, {
+odoo.define('web_widget_one2many_tags.form_widgets', function (require) {
+    "use strict";
+
+    var core = require('web.core');
+    var FieldOne2Many = core.form_widget_registry.get('one2many');
+    var common = require('web.form_common');
+
+    var One2manyTag = widget_one2many_tag.FieldOne2ManyTags.extend({
         template: "FieldOne2ManyTags",
         tag_template: "FieldOne2ManyTag",
         disable_utility_classes: false,
         initialize_texttext: function()
         {
             var self = this;
+
             return {
                 plugins: 'tags arrow filter',
                 ext: {
                     itemManager: {
                         itemToString: function(item) {
                             return item.name;
-                        },
+                        }
                     },
                     arrow: {
                         onArrowClick: function(e)
                         {
-                            var list_view = new instance.web.form.One2ManyListView(
+                            var list_view = new widget_one2many_tag.web.form.One2ManyListView(
                                 self, self.dataset);
                             list_view.o2m = self;
                             list_view.editable = function() { return false };
                             list_view.do_add_record();
-                        },
+                        }
                     },
                     tags: {
                         isTagAllowed: function(tag) {
@@ -43,12 +48,12 @@ openerp.web_widget_one2many_tags = function(instance)
                         renderTag: function(tag) {
                             return $.fn.textext.TextExtTags.prototype.renderTag
                                 .call(this, tag).data("id", tag.id);
-                        },
-                    },
+                        }
+                    }
                 },
                 filter: {
                     items: []
-                },
+                }
             };
         },
         build_context: function()
@@ -81,7 +86,7 @@ openerp.web_widget_one2many_tags = function(instance)
                     self.$text.textext(self.initialize_texttext());
                     self.$text.bind('tagClick', function(e, tag, value, callback)
                     {
-                        var list_view = new instance.web.form.One2ManyViewManager(
+                        var list_view = new widget_one2many_tag.web.form.One2ManyViewManager(
                             self, self.dataset);
                         list_view.o2m = self;
                         self.dataset.select_id(value.id);
@@ -99,35 +104,35 @@ openerp.web_widget_one2many_tags = function(instance)
                 self.$text = null;
             }
             return self.dataset.read_ids(self.dataset.ids, ['display_name'])
-            .then(function(names)
-            {
-                if(self.get("effective_readonly"))
+                .then(function(names)
                 {
-                    self.$el.html(instance.web.qweb.render(
-                        self.tag_template,
-                        {
-                            elements: _(names).map(function(name)
-                            {
-                                return [name.id, name.display_name];
-                            })
-                        }
-                    ));
-                }
-                else if(self.$text.textext().length)
-                {
-                    self.tags.addTags(_(names).map(function(name)
+                    if(self.get("effective_readonly"))
                     {
-                        return {
-                            name: name.display_name || instance.web._t('New record'),
-                            id: name.id,
-                        }
-                    }));
-                }
-            });
+                        self.$el.html(widget_one2many_tag.web.qweb.render(
+                            self.tag_template,
+                            {
+                                elements: _(names).map(function(name)
+                                {
+                                    return [name.id, name.display_name];
+                                })
+                            }
+                        ));
+                    }
+                    else if(self.$text.textext().length)
+                    {
+                        self.tags.addTags(_(names).map(function(name)
+                        {
+                            return {
+                                name: name.display_name || widget_one2many_tag.web._t('New record'),
+                                id: name.id,
+                            }
+                        }));
+                    }
+                });
         },
         reinitialize: function()
         {
-            var result = instance.web.form.ReinitializeFieldMixin.reinitialize.call(this);
+            var result = widget_one2many_tag.web.form.ReinitializeFieldMixin.reinitialize.call(this);
             this.reload_current_view();
             return result;
         },
@@ -142,12 +147,12 @@ openerp.web_widget_one2many_tags = function(instance)
         },
     });
 
-    instance.web.form.widgets.add(
+    widget_one2many_tag.web.form.widgets.add(
         'one2many_tags',
-        'instance.web_widget_one2many_tags.FieldOne2ManyTags'
+        'widget_one2many_tag.web_widget_one2many_tags.FieldOne2ManyTags'
     );
 
-    instance.web.list.One2ManyTags = instance.web.list.Column.extend({
+    widget_one2many_tag.web.list.One2ManyTags = widget_one2many_tag.web.list.Column.extend({
         _format: function (row_data, options)
         {
             if(!_.isEmpty(row_data[this.id].value) && row_data[this.id + '__display'])
@@ -158,18 +163,18 @@ openerp.web_widget_one2many_tags = function(instance)
         },
     });
 
-    instance.web.list.columns.add(
+    widget_one2many_tag.web.list.columns.add(
         'field.one2many_tags',
-        'instance.web.list.One2ManyTags'
+        'widget_one2many_tag.web.list.One2ManyTags'
     );
 
-    instance.web.ListView.List.include({
+    widget_one2many_tag.web.ListView.List.include({
         render_cell: function (record, column)
         {
             if(column.widget == 'one2many_tags')
             {
-                var dataset = new instance.web.form.One2ManyDataSet(
-                        this, column.relation),
+                var dataset = new widget_one2many_tag.web.form.One2ManyDataSet(
+                    this, column.relation),
                     fake_widget = {
                         dataset: dataset,
                         trigger_on_change: function() {},
@@ -178,35 +183,35 @@ openerp.web_widget_one2many_tags = function(instance)
                         set: function() {},
                         build_context: function()
                         {
-                            return new instance.web.CompoundContext(
+                            return new widget_one2many_tag.web.CompoundContext(
                                 column.context
                             );
                         },
                     },
                     value = record.get(column.id);
                 dataset.o2m = fake_widget;
-                openerp.web_widget_one2many_tags.FieldOne2ManyTags
+                odoo.web_widget_one2many_tags.FieldOne2ManyTags
                     .prototype.set_value.apply(fake_widget, [value])
                 dataset.read_ids(dataset.ids, ['display_name'])
-                .then(function(names) {
-                    if(!names.length)
-                    {
-                        return;
-                    }
-                    record.set(
-                        column.id + '__display',
-                        _(names)
-                            .map(function(name)
-                            {
-                                return name.display_name ||
-                                    instance.web._t('New record');
-                            })
-                            .join(', ')
-                    );
-                });
+                    .then(function(names) {
+                        if(!names.length)
+                        {
+                            return;
+                        }
+                        record.set(
+                            column.id + '__display',
+                            _(names)
+                                .map(function(name)
+                                {
+                                    return name.display_name ||
+                                        widget_one2many_tag.web._t('New record');
+                                })
+                                .join(', ')
+                        );
+                    });
                 column = _(column).extend({type: 'one2many_tags'});
             }
             return this._super(record, column);
         },
     });
-}
+});
