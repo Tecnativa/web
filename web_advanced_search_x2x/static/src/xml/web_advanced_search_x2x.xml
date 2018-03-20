@@ -8,7 +8,7 @@
             <div class="oe_form"/>
         </t>
         <t t-if="!widget.relational">
-            <t t-call="SearchView.extended_search.proposition" />
+            <input type="text"/>
         </t>
     </t>
 </templates>
