@@ -130,11 +130,15 @@ odoo.define('web_advanced_search_x2x.search_filters', function (require) {
                 var domain = new data.CompoundDomain(),
                     name = this.field.name;
                 $.map(value, function (el) {
-                    domain.add([[
-                        _.str.sprintf("%s.%s", name, el[0]),
-                        el[1],
-                        el[2],
-                    ]]);
+                    if (["|", "&", "!"].indexOf(el) !== -1) {
+                        domain.add([el]);
+                    } else {
+                        domain.add([[
+                            _.str.sprintf("%s.%s", name, el[0]),
+                            el[1],
+                            el[2],
+                        ]]);
+                    }
                 });
                 return domain;
             } else {
