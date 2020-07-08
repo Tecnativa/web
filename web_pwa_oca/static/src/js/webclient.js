@@ -12,7 +12,8 @@
          * @override
          */
         show_application: function() {
-            this.pwa_manager = new PWAManager(this);
+            this.pwa_manager = new PWAManager();
+            this.pwa_manager.setParent(this);
             this.pwa_manager.registerServiceWorker('/service-worker.js', this._onRegisterServiceWorker);
             return this._super.apply(this, arguments);
         },

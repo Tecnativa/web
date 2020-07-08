@@ -1,6 +1,7 @@
 # Copyright 2020 Lorenzo Battistini @ TAKOBI
 # Copyright 2020 Tecnativa - Alexandre D. Díaz
 # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl).
+import json
 from odoo.http import request, Controller, route
 
 
@@ -11,11 +12,13 @@ class PWA(Controller):
         return [
             '/web/static/lib/underscore/underscore.js',
             '/web_pwa_oca/static/src/js/worker/libs/class.js',
+            '/web_pwa_oca/static/src/js/worker/base/tools.js',
+            '/web_pwa_oca/static/src/js/worker/base/cache_manager.js',
             '/web_pwa_oca/static/src/js/worker/pwa.js',
         ]
 
     def _get_asset_urls(self, asset_xml_id):
-        """ Get all url's that have 'asset_xml_id' """
+        """Get all url's that have 'asset_xml_id'"""
         qweb_sudo = request.env['ir.qweb'].sudo()
         assets = qweb_sudo._get_asset_nodes(asset_xml_id, {}, True, True)
         urls = []
@@ -27,7 +30,7 @@ class PWA(Controller):
         return urls
 
     def _get_pwa_params(self):
-        """ Get javascript PWA class initialzation params """
+        """Get javascript PWA class initialzation params"""
         urls = []
         urls.extend(self._get_asset_urls("web.assets_common"))
         urls.extend(self._get_asset_urls("web.assets_backend"))
@@ -42,15 +45,14 @@ class PWA(Controller):
 
     @route('/service-worker.js', type='http', auth="public")
     def render_service_worker(self):
-        """ Route to register the service worker in the 'main' scope ('/') """
+        """Route to register the service worker in the 'main' scope ('/')"""
         return request.render('web_pwa_oca.service_worker', {
             'pwa_scripts': self._get_pwa_scripts(),
             'pwa_params': self._get_pwa_params(),
         }, headers=[('Content-Type', 'text/javascript;charset=utf-8')])
 
-    @route('/web_pwa_oca/manifest.json', type='http', auth="public")
-    def render_manifest(self):
-        """ Render the manifest used to install the page as app """
+    def _get_pwa_manifest(self):
+        """Webapp manifest"""
         config_param_sudo = request.env['ir.config_parameter'].sudo()
         pwa_name = config_param_sudo.get_param("pwa.manifest.name", "Odoo PWA")
         pwa_short_name = config_param_sudo.get_param(
@@ -77,15 +79,43 @@ class PWA(Controller):
             "pwa.manifest.background_color", "#2E69B5")
         theme_color = config_param_sudo.get_param(
             "pwa.manifest.theme_color", "#2E69B5")
-        return request.render('web_pwa_oca.manifest', {
-            'pwa_name': pwa_name,
-            'pwa_short_name': pwa_short_name,
-            'icon128x128': icon128x128,
-            'icon144x144': icon144x144,
-            'icon152x152': icon152x152,
-            'icon192x192': icon192x192,
-            'icon256x256': icon256x256,
-            'icon512x512': icon512x512,
-            'background_color': background_color,
-            'theme_color': theme_color,
-        }, headers=[('Content-Type', 'text/javascript;charset=utf-8')])
+        return {
+          "name": pwa_name,
+          "short_name": pwa_short_name,
+          "icons": [{
+            "src": icon128x128,
+              "sizes": "128x128",
+              "type": "image/png"
+            }, {
+              "src": icon144x144,
+              "sizes": "144x144",
+              "type": "image/png"
+            }, {
+              "src": icon152x152,
+              "sizes": "152x152",
+              "type": "image/png"
+            }, {
+              "src": icon192x192,
+              "sizes": "192x192",
+              "type": "image/png"
+            }, {
+              "src": icon256x256,
+              "sizes": "256x256",
+              "type": "image/png"
+            }, {
+              "src": icon512x512,
+              "sizes": "512x512",
+              "type": "image/png"
+            }],
+          "start_url": "/web",
+          "display": "standalone",
+          "background_color": background_color,
+          "theme_color": theme_color
+        }
+
+    @route('/web_pwa_oca/manifest.webmanifest', type='http', auth="public")
+    def pwa_manifest(self):
+        """Returns the manifest used to install the page as app"""
+        return request.make_response(
+            json.dumps(self._get_pwa_manifest()),
+            headers=[('Content-Type', 'text/javascript;charset=utf-8')])

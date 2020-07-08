@@ -5,14 +5,11 @@
     "use strict";
 
     var Class = require("web.Class");
+    var mixins = require("web.mixins");
 
 
-    var PWAManager = Class.extend({
-        /**
-         * @param {OdooClass} parent
-         */
-        init: function(parent) {
-            this._parent = parent;
+    var PWAManager = Class.extend(mixins.ParentedMixin, {
+        init: function() {
             if (!('serviceWorker' in navigator)) {
                 throw new Error(
                     "This browser is not compatible with service workers");

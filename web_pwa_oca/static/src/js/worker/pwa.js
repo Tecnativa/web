@@ -11,7 +11,7 @@ var PWA = OdooClass.extend({
     init: function (cache_name, prefetched_urls) {
         this._cache_name = cache_name;
         this._prefetched_urls = prefetched_urls;
-        this._cache = caches;
+        this._cache = new CacheManager();
     },
 
     /**
@@ -19,7 +19,7 @@ var PWA = OdooClass.extend({
      */
     installWorker: function () {
         return new Promise(async resolve => {
-            await this._initCaches();
+            await this._cache.initCache(this._cache_name);
             await this._prefetchData();
             resolve();
         });
@@ -30,8 +30,8 @@ var PWA = OdooClass.extend({
      */
     activateWorker: function () {
         return new Promise(async resolve => {
-            await this._initCaches();
-            await this._cleanCaches();
+            await this._cache.initCache(this._cache_name);
+            await this._cache.clean();
             resolve();
         });
     },
@@ -42,7 +42,7 @@ var PWA = OdooClass.extend({
     processRequest: function (request) {
         if (request.method === 'GET' && (request.cache !== 'only-if-cached' || request.mode === 'same-origin')) {
             // Strategy: Cache First
-            return this._cache.match(request).then(function(response){
+            return this._cache.get(this._cache_name).match(request).then(function(response){
                 return response || fetch(request);
             });
         }
@@ -53,30 +53,9 @@ var PWA = OdooClass.extend({
     /**
      * @returns {Promise}
      */
-    _initCaches: function() {
-        return caches.open(this._cache_name).then(cache => this._cache = cache);
-    },
-
-    /**
-     * @returns {Promise}
-     */
-    _cleanCaches: function() {
-        return caches.keys().then(keyList => {
-            return Promise.all(keyList.map(key => {
-                if (key !== this._cache_name) {
-                    console.log('[ServiceWorker] Removing old cache', key);
-                    return caches.delete(key);
-                }
-            }));
-        });
-    },
-
-    /**
-     * @returns {Promise}
-     */
     _prefetchData: function() {
         // Prefetch URL's
-        return this._cache.addAll(this._prefetched_urls);
+        return this._cache.get(this._cache_name).addAll(this._prefetched_urls);
     },
 
 });
