@@ -1,0 +1,1 @@
+Odoo client proxy
