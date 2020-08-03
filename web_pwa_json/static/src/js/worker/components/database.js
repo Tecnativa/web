@@ -63,17 +63,9 @@ const DatabaseComponent = OdooClass.extend({
             const [objectStore] = this._db.getObjectStores("webclient", ["records"], "readonly");
             if (objectStore) {
                 resolve(await new Promise((resolve, reject) => {
-                    console.log("---- MODEL RECORD PROMISE RESOL");
-                    console.log(model);
-                    console.log(domain);
                     const query = objectStore.get([model, "[]"]);
                     query.onsuccess = function(evt) {
-                        console.log("-----------> SUCCESS");
-                        console.log(evt.target.result);
                         const records = evt.target.result.records.slice(offset, limit===-1?undefined:offset+limit);
-                        console.log(records);
-                        console.log(domain);
-                        console.log(self.queryRecords(records, domain));
                         resolve(self.queryRecords(records, domain))
                     };
                     query.onerror = function(evt) {
@@ -98,20 +90,6 @@ const DatabaseComponent = OdooClass.extend({
                 resolve(_.findWhere(records, {id: rec_id}));
             }
             reject();
-
-            // const [objectStore] = this._db.getObjectStores("webclient", ["records"], "readonly");
-            // if (objectStore) {
-            //     resolve(await new Promise((resolve, reject) => {
-            //         const query = objectStore.get([model, domain]);
-            //         query.onsuccess = function(evt) {
-            //             resolve(_.findWhere(evt.target.result.records, {id: rec_id}));
-            //         };
-            //         query.onerror = function(evt) {
-            //             reject();
-            //         };
-            //     }));
-            // }
-            // reject();
         });
     },
 
@@ -133,6 +111,10 @@ const DatabaseComponent = OdooClass.extend({
         if (!sdomain.length) {
             return records;
         }
+
+        // ['|','|',[fieldA,'=',10],[fieldB,'=',20],[fieldC,'=',30],[fieldD,'=',40]]
+
+        // (fieldA == 10 || fieldB == 20) || (fieldC == 30 && fieldD == 40)
 
         const logic_oper = {
             '&': {
@@ -166,8 +148,7 @@ const DatabaseComponent = OdooClass.extend({
                 return leafL.search(r) !== -1;
             },
             'not like': function (leafL, leafR) {
-                const r = new RegExp(`.*${leafR.replace(/%/g,'.*').replace(/_/g,'.+')}.*`);
-                return leafL.search(r) === -1;
+                return !this['not like'](leafL, leafR);
             },
             '=ilike': function (leafL, leafR) {
                 const r = new RegExp(leafR.replace(/%/g,'.*').replace(/_/g,'.+'), "i");
@@ -178,14 +159,13 @@ const DatabaseComponent = OdooClass.extend({
                 return leafL.search(r) !== -1;
             },
             'not ilike': function (leafL, leafR) {
-                const r = new RegExp(`.*${leafR.replace(/%/g,'.*').replace(/_/g,'.+')}.*`, "i");
-                return leafL.search(r) === -1;
+                return !this['ilike'](leafL, leafR);
             },
             'in': function (leafL, leafR) {
                 return leafR.indexOf(leafL) !== -1;
             },
             'not in': function (leafL, leafR) {
-                return leafR.indexOf(leafL) === -1;
+                return !this['in'](leafL, leafR);
             }
         }
 
@@ -211,7 +191,7 @@ const DatabaseComponent = OdooClass.extend({
                     }
                     doOper();
                 } else {
-                    cur_criterias.unshift(oper[criteria[1]](this._getValueID(record[criteria[0]]), criteria[2]));
+                    cur_criterias.unshift(oper[criteria[1]](this._getValueOrID(record[criteria[0]]), criteria[2]));
                 }
                 --cur_arity;
             }
@@ -228,7 +208,7 @@ const DatabaseComponent = OdooClass.extend({
         return results;
     },
 
-    _getValueID: function (value) {
+    _getValueOrID: function (value) {
         if (_.isArray(value)) {
             return value[0];
         }

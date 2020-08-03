@@ -1,3 +1,5 @@
+// Copyright 2020 Tecnativa - Alexandre Díaz
+// License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 odoo.define("web_pwa_json.KanbanSearchRenderer", function (require) {
     "use strict";
 
@@ -7,6 +9,9 @@ odoo.define("web_pwa_json.KanbanSearchRenderer", function (require) {
     require("web.KanbanRendererMobile");
 
     var KanbanSearchRenderer = KanbanRenderer.extend({
+        /**
+         * @override
+         */
         init: function (parent, state, params) {
             this._super.apply(this, arguments);
             this.activeSection = "search";
@@ -16,6 +21,9 @@ odoo.define("web_pwa_json.KanbanSearchRenderer", function (require) {
             this.setSearchState(parent._searchRecords);
         },
 
+        /**
+         * @override
+         */
         start: function () {
             //this.$el.addClass("d-inline-flex flex-wrap");
             this.$el.addClass("row");
@@ -30,6 +38,9 @@ odoo.define("web_pwa_json.KanbanSearchRenderer", function (require) {
             return $.when();
         },
 
+        /**
+         * @override
+         */
         _renderView: function () {
             var self = this;
             var oldWidgets = this.widgets;
@@ -52,6 +63,10 @@ odoo.define("web_pwa_json.KanbanSearchRenderer", function (require) {
             });
         },
 
+        /**
+         * @private
+         * @param {Array[Object]} results
+         */
         _processSearchData: function (results) {
             var search_params = py.eval(this.view.arch.attrs.search);
             var records = [];

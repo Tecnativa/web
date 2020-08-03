@@ -1,3 +1,5 @@
+// Copyright 2020 Tecnativa - Alexandre Díaz
+// License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
     "use strict";
 
@@ -14,6 +16,9 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
             "click .oe_kanban_flip_card_front": "_onClickFlipCardFront",
         },
 
+        /**
+         * @override
+         */
         init: function (parent, state, options) {
             this._super(parent);
             this.options = options;
@@ -23,18 +28,30 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
             this._setState(state, options.searchRecord);
         },
 
+        /**
+         * @override
+         */
         start: function () {
             return $.when(this._super.apply(this, arguments), this._render());
         },
 
+        /**
+         * @override
+         */
         on_attach_callback: function () {
             _.invoke(this.subWidgets, "on_attach_callback");
         },
 
+        /**
+         * @override
+         */
         on_detach_callback: function () {
             _.invoke(this.subWidgets, "on_detach_callback");
         },
 
+        /**
+         * @override
+         */
         update: function (record) {
             // detach the widgets because the record will empty its $el, which will
             // remove all event handlers on its descendants, and we want to keep
@@ -45,27 +62,29 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
         },
 
         /**
+         * Generates the URI for the image in base64
+         *
          * @private
-         * @param {string} model the name of the model
-         * @param {string} field the name of the field
-         * @param {integer} id the id of the resource
-         * @param {integer} cache the cache duration, in seconds
-         * @param {Object} options
-         * @returns {string} the url of the image
+         * @param {string} field
+         * @returns {string}
          */
         _getSearchImage: function (field) {
-            var file_type_magic_word = {
-                "/": "jpg",
-                R: "gif",
-                i: "png",
-                P: "svg+xml",
-            };
-            return (
-                "data:image/" +
-                file_type_magic_word[this.recordSearch[field][0]] +
-                ";base64," +
-                this.recordSearch[field]
-            );
+            var search_record = this.recordSearch[field];
+            if (search_record) {
+                var file_type_magic_word = {
+                    "/": "jpg",
+                    R: "gif",
+                    i: "png",
+                    P: "svg+xml",
+                };
+                return (
+                    "data:image/" +
+                    file_type_magic_word[this.recordSearch[field][0]] +
+                    ";base64," +
+                    this.recordSearch[field]
+                );
+            }
+            return "";
         },
 
         /**
@@ -79,6 +98,12 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
             );
         },
 
+        /**
+         * Store model info used to represent the data
+         *
+         * @param {Object} viewState
+         * @param {Object} recordSearch
+         */
         _setState: function (viewState, recordSearch) {
             this.fields = this.getParent().state.fields;
             this.fieldsInfo = this.getParent().state.fieldsInfo.kanban;
@@ -97,6 +122,9 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
             };
         },
 
+        /**
+         * @override
+         */
         _render: function () {
             this.defs = [];
             this._replaceElement(
@@ -191,6 +219,11 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
             return widget;
         },
 
+        /**
+         * Initialize widgets using "widget" tag
+         *
+         * @param {jQueryElement} $container
+         */
         _processWidgets: function ($container) {
             var self = this;
             $container.find("widget").each(function () {
@@ -219,6 +252,12 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
             });
         },
 
+        // HANDLE EVENTS
+
+        /**
+         * @private
+         * @param {ClickEvent} evt
+         */
         _onClickFlipCardFront: function (evt) {
             var $innerCard = this.$(".oe_kanban_flip_card_inner");
             if (this.read_only_mode || $innerCard.hasClass("active")) {
@@ -230,10 +269,29 @@ odoo.define("web_pwa_json.KanbanSearchRecord", function (require) {
             $innerCard.addClass("active");
         },
 
+        /**
+         * @private
+         * @param {CustomEvent} evt
+         */
         _onRestoreFlipCard: function (evt) {
             this.$(".oe_kanban_flip_card_inner").removeClass("active");
         },
 
+        /**
+         * Update the selected element using the given format.
+         * A non-field element has defined the "data-field" paramenter with
+         * the field that trigger the update. Also this non-field element has
+         * the attribute "format" to use with "py.eval".
+         * Note that the context used in py.eval has all record fields data.
+         *
+         * Exmaple:
+         * <span t-esc="obj.qty" data.field="qty" format="%.2f Items"/>
+         * ** This will change the elements when 'qty' changes and prints the
+         * text: 20 Items
+         *
+         * @private
+         * @param {CustomEvent} evt
+         */
         _onQuickRecordUpdated: function (ev) {
             var fields_changed = Object.keys(ev.data.changes);
             for (var field_name of fields_changed) {
