@@ -13,43 +13,17 @@
                 <group class="p-0 m-0">
                     <field
                         name="order_line"
-                        mode="kanban"
                         attrs="{'readonly': [('state', 'in', ('done','cancel'))]}"
                         nolabel="1"
+                        widget="one2many_product_picker"
                     >
-                        <kanban class="o_kanban_mobile" search="['product_id', 'name', ['id', 'uom_id', 'display_name', 'uom_category_id', 'image_medium']]">
+                        <kanban search="['product_id', 'name', ['id', 'uom_id', 'display_name', 'uom_category_id', 'image_medium']]">
                             <field name="name"/>
                             <field name="product_id" />
                             <field name="product_uom_qty" />
                             <field name="product_uom"/>
                             <group name="Desks" domain="[('name', 'ilike', '%desk%')]" order="id ASC" />
                             <group name="Chairs" domain="[('name', 'ilike', '%chair%')]" />
-                            <templates>
-                                <t t-name="kanban-search-box">
-                                    <div class="oe_kanban_flip_container p-1 col-6 col-sm-4 col-md-2 col-lg-2 col-xl-1">
-                                        <div class="oe_kanban_flip_card position-relative">
-                                            <div class="oe_kanban_flip_card_inner">
-                                                <div t-attf-class="oe_kanban_flip_card_front p-0 {{state &amp;&amp; 'border-primary'}}">
-                                                    <div t-if="state" class="position-absolute m-0 text-left">
-                                                        <span data-field="product_uom_qty" data-format="str(product_uom_qty) + ' x ' + product_uom.data.display_name" t-esc="state.data.product_uom_qty + ' x ' + state.data.product_uom.data.display_name" class="badge badge-primary font-weight-bold rounded-0 mt-1 p-2" /><br/>
-                                                    </div>
-                                                    <span class="oe_kanban_title position-absolute fixed-bottom p-1" t-esc="record_search.display_name" />
-                                                    <!-- <img class="img img-fluid" t-attf-src="/web/image/product.product/{{record_search.id}}/image/300x300" /> -->
-                                                    <img alt="" class="img img-fluid" t-att-src="kanban_image('image_medium')"/>
-                                                </div>
-                                                <div class="oe_kanban_flip_card_back">
-                                                    <widget name="search_quick_create_form" compare-key="product_uom" t-attf-context="{'default_product_id': {{record_search.id}}, 'default_product_uom': {{state &amp;&amp; state.data.product_uom.data.id || record_search.uom_id[0]}}, 'default_name': '{{record_search.display_name}}', 'default_order_id': active_id}">
-                                                        <form>
-                                                            <field name="product_uom_qty" class="mb-3" widget="numeric_step" />
-                                                            <field name="product_uom" can_create="false" can_write="false" class="mb-3" options="{'no_open': True, 'no_create': True, 'no_edit': True}" t-attf-domain="[['category_id', '=', {{record_search.uom_category_id[0]}}]]" />
-                                                        </form>
-                                                    </widget>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </t>
-                            </templates>
                         </kanban>
                     </field>
                 </group>

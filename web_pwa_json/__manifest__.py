@@ -20,7 +20,6 @@
     ],
     'qweb': [
         'static/src/xml/base.xml',
-        'static/src/xml/kanban.xml',
     ],
     'installable': True,
     'auto_install': False,

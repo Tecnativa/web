@@ -2,16 +2,9 @@
 <odoo>
     <template id="assets_backend" name="account assets" inherit_id="web.assets_backend">
         <xpath expr="." position="inside">
-            <link type="text/css" rel="stylesheet"
-                  href="/web_pwa_json/static/src/scss/kanban_search.scss"/>
             <!-- <script type="text/javascript" src="/web_pwa_json/static/src/js/views/basic_view.js"></script> -->
-            <script type="text/javascript" src="/web_pwa_json/static/src/js/views/kanban/kanban_search_record.js"></script>
-            <script type="text/javascript" src="/web_pwa_json/static/src/js/views/kanban/kanban_search_renderer.js"></script>
-            <script type="text/javascript" src="/web_pwa_json/static/src/js/views/kanban/search_quick_create_form_view.js"></script>
-            <script type="text/javascript" src="/web_pwa_json/static/src/js/views/kanban/search_quick_create_form.js"></script>
             <script type="text/javascript" src="/web_pwa_json/static/src/js/views/formMobile/form_mobile_renderer.js"></script>
             <script type="text/javascript" src="/web_pwa_json/static/src/js/views/formMobile/form_mobile_view.js"></script>
-            <script type="text/javascript" src="/web_pwa_json/static/src/js/widgets/field_one2many.js"></script>
             <script type="text/javascript" src="/web_pwa_json/static/src/js/user_menu.js"></script>
             <script type="text/javascript" src="/web_pwa_json/static/src/js/action_manager_act_window.js"></script>
         </xpath>
