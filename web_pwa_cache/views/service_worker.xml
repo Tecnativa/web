@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="pwa_core_events" inherit_id="web_pwa_oca.pwa_core_events">
+        <xpath expr="." position="inside">
+            <t t-set="evt_message">
+                oca_pwa.userPage.onClientMessage(evt.data);
+            </t>
+            self.addEventListener('message', evt =&gt; {
+                <t t-raw="evt_message" />
+            });
+        </xpath>
+    </template>
+
+</odoo>

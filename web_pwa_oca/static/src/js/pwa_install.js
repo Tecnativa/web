@@ -8,9 +8,12 @@ odoo.define('web_pwa_oca.systray.install', function(require) {
 
     var deferredInstallPrompt = null;
 
+    console.log("-------- pasa 1111");
+
 
     UserMenu.include({
         start: function() {
+            console.log("-------- pasa 222222");
             window.addEventListener('beforeinstallprompt', this.saveBeforeInstallPromptEvent);
             return this._super.apply(this, arguments);
         },
