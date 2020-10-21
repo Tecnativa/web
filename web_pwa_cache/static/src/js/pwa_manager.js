@@ -5,6 +5,8 @@
     "use strict";
 
     var core = require('web.core');
+    var mixins = require('web.mixins');
+    var ServicesMixin = require('web.ServicesMixin');
     var PWAManager = require("web_pwa_oca.PWAManager");
     var PWAModeSelector = require("web_pwa_cache.PWAModeSelector");
     var BroadcastSWMixin = require("web_pwa_cache.BroadcastSWMixin");
@@ -12,6 +14,8 @@
 
     var QWeb = core.qweb;
 
+    PWAManager.include(mixins.PropertiesMixin);
+    PWAManager.include(ServicesMixin);
     PWAManager.include(BroadcastSWMixin);
     PWAManager.include({
         custom_events: {
@@ -19,9 +23,11 @@
         },
         _show_prefetch_modal_delay: 450,
 
+        /**
+         * @override
+         */
         init: function() {
             this._super.apply(this, arguments);
-            var self = this;
 
             this._prefetchTasksInfo = {};
             this._prefetchModelHide = false;
@@ -31,7 +37,10 @@
             this.$modalPrefetchProgressContent = this.$modalPrefetchProgress.find('.modal-body');
         },
 
-        setPWAMode: function(mode, need_send) {
+        /**
+         * @param {String} mode
+         */
+        setPWAMode: function(mode) {
             this._pwaMode = mode;
             this.postServiceWorkerMessage({
                 type: 'SET_PWA_MODE',
@@ -39,10 +48,18 @@
             });
         },
 
+        /**
+         * Update progressbars of the prefetch dialog
+         */
         _updatePrefetchModalData: function() {
             this.$modalPrefetchProgressContent.empty().append(QWeb.render("web_pwa_cache.PrefetchProgressTasks", {tasks: _.values(this._prefetchTasksInfo)}));
         },
 
+        /**
+         * Receive service worker messages
+         *
+         * @param {BroadcastChannelEvent} evt
+         */
         _onReceiveServiceWorkerMessage: function(evt) {
             this._super.apply(this, arguments);
             switch (evt.data.type) {
@@ -62,11 +79,24 @@
                         });
                         selector.show();
                     }
+                    this.postServiceWorkerMessage({
+                        type: 'SET_PWA_STANDALONE_MODE',
+                        status: this._isPWAStandalone(),
+                    });
                 } break;
                 case "PWA_CONFIG_CHANGED": {
                     if (evt.data.data.pwa_mode) {
                         this._pwaMode = evt.data.data.pwa_mode;
                     }
+                } break;
+                case "PWA_CACHE_FAIL": {
+                    this.call("notification", "notify", {
+                        type: 'warning',
+                        title: 'PWA Cache Not Found!',
+                        message: "Can't found any cache to '" + evt.data.url + "'",
+                        sticky: false,
+                        className: '',
+                    });
                 } break;
                 /* Prefetching */
                 case "PREFETCH_MODAL_TASK_INFO": {
@@ -118,6 +148,9 @@
 
         },
 
+        /**
+         * @returns {Boolean}
+         */
         _isPWAStandalone: function() {
             return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
         },

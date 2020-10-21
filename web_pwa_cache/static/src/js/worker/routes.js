@@ -55,7 +55,9 @@ PWA.include({
                     request_data.params
                 );
                 this._updateSyncCount();
-                return resolve(ResponseJSONRPC(resp_data));
+                if (resp_data) {
+                    return resolve(ResponseJSONRPC(resp_data));
+                }
             }
             return reject();
         });
@@ -79,7 +81,9 @@ PWA.include({
                     request_data.params
                 );
                 this._updateSyncCount();
-                return resolve(ResponseJSONRPC(resp_data));
+                if (resp_data) {
+                    return resolve(ResponseJSONRPC(resp_data));
+                }
             }
             return reject();
         });
@@ -106,34 +110,52 @@ PWA.include({
      * @return {Promise[Response]}
      */
     _routeOutActionLoad: function (url, request_data) {
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             const resp_data = await this._exporter.action_load(request_data.params);
-            return resolve(ResponseJSONRPC(resp_data));
+            if (resp_data) {
+                return resolve(ResponseJSONRPC(resp_data));
+            }
+            return reject();
+        });
+    },
+
+    /**
+     * @param {String} url
+     * @param {Object} request_data
+     * @returns {Promise[Response]}
+     */
+    _routeOutDatasetSearchRead: function (url, request_data) {
+        return new Promise(async (resolve, reject) => {
+            const resp_data = await this._exporter.search_read(
+                false,
+                request_data.params
+            );
+            if (resp_data) {
+                return resolve(ResponseJSONRPC(resp_data));
+            }
+            return reject();
         });
     },
 
     /**
      * @returns {Promise[Response]}
      */
-    _routeOutDatasetSearchRead: function (url, request_data) {
-        return new Promise(async (resolve) => {
-            const resp_data = await this._exporter.search_read(
-                false,
-                request_data.params
-            );
-            return resolve(ResponseJSONRPC(resp_data));
-        });
-    },
-
     _routeOutTranslations: function () {
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             const resp_data = await this._exporter.translations();
-            return resolve(ResponseJSONRPC(resp_data.value));
+            if (resp_data) {
+                return resolve(ResponseJSONRPC(resp_data.value));
+            }
+            return reject();
         });
     },
 
     /**
      * Cache Generic Post Requests
+     *
+     * @param {String} url
+     * @param {Object} request_data
+     * @returns {Promise[Response]}
      */
     _routeOutGenericPost: function (url, request_data) {
         return new Promise(async (resolve, reject) => {

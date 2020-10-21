@@ -6,6 +6,9 @@
  * This class is used to communicate with the user page.
  */
 PWA.include({
+    /**
+     * @override
+     */
     init: function () {
         this._super.apply(this, arguments);
         this._channel_out = new BroadcastChannel("sw-messages");
@@ -16,10 +19,16 @@ PWA.include({
         );
     },
 
+    /**
+     * @param {Object} message
+     */
     postClientPageMessage: function (message) {
         this._channel_out.postMessage(message);
     },
 
+    /**
+     * @param {BroadcastChannelEvent} evt
+     */
     _onReceiveClientMessage: function (evt) {
         if (!evt.isTrusted) {
             return;
@@ -35,9 +44,11 @@ PWA.include({
                     });
                 });
                 if (evt.data.mode === "online") {
-                    console.log("------------ PAW SET MODE");
                     this._prefetchDataPost();
                 }
+            } break;
+            case "PWA_PREFETCH_NEED_ACTION_NO": {
+                this._send
             } break;
             case "GET_PWA_CONFIG": {
                 this._sendConfigToClient();
@@ -48,6 +59,12 @@ PWA.include({
             case "START_SYNCHRONIZATION": {
                 this._startSync().then(() => this._prefetchDataPost());
             } break;
+            case "START_PREFETCH": {
+                this._prefetchDataPost();
+            } break;
+            case "SET_PWA_STANDALONE_MODE": {
+                this._config.set("standalone", evt.data.status)
+            }
         };
     },
 });

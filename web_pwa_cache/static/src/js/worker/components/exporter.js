@@ -58,8 +58,6 @@ const Exporter = DatabaseComponent.extend({
     },
 
     /**
-     * No 'onchange' implementations
-     *
      * @param {String} model
      * @param {Object} data
      * @returns {Promise[Boolean]}
@@ -74,7 +72,7 @@ const Exporter = DatabaseComponent.extend({
             if (!record) {
                 return resolve({value:{}});
             }
-            return resolve({value: record.changes});
+            return resolve(record.changes);
         });
     },
 
@@ -220,9 +218,6 @@ const Exporter = DatabaseComponent.extend({
                 raw: data,
                 date: (new Date()).getTime(),
             });
-            console.log("------- CREATE RECORD");
-            console.log(defaults);
-            console.log(data.args);
             data.args = _.map(data.args, (item) => _.extend(item, defaults));
             data.args = _.map(data.args, (item) => {
                 if (!item.name) {
@@ -243,7 +238,6 @@ const Exporter = DatabaseComponent.extend({
      * @returns {Promise[Object]}
      */
     default_get: function (model, data) {
-        var self = this;
         return new Promise(async (resolve) => {
             let record = await this._db.getRecord("webclient", "defaults", model);
 
@@ -256,27 +250,18 @@ const Exporter = DatabaseComponent.extend({
             const defaults = {};
             for (const key of default_keys) {
                 const skey = key.substr(8);
-                // const svalue = context_defaults[key];
-                // if (typeof svalue !== 'object') {
-                //     let view_def = await this._db.getRecord("webclient", "views", model);
-                //     if ('relation' in view_def.fields[skey]) {
-                //         console.log("----- NAME GET");
-                //         console.log(context_defaults[key]);
-                //         defaults[skey] = await self.name_get(model, {
-                //             args: [[context_defaults[key]]]
-                //         });
-                //     } else {
-                //         defaults[skey] = context_defaults[key];
-                //     }
-                // } else {
                 defaults[skey] = context_defaults[key];
-                // }
             }
             record = _.extend({}, record, defaults);
             return resolve(_.pick(record, data.args[0]));
         });
     },
 
+    /**
+     * @param {String} model
+     * @param {Object} data
+     * @returns {Promise}
+     */
     get_filters: function (model, data) {
         return this._db.getRecord("webclient", "filters", data.args[0]);
     },
@@ -300,6 +285,9 @@ const Exporter = DatabaseComponent.extend({
         });
     },
 
+    /**
+     * @returns {Promise[Object]}
+     */
     load_menus: function () {
         return new Promise(async (resolve) => {
             const record = await this._db.getRecord("webclient", "userdata", "menus");
@@ -336,6 +324,9 @@ const Exporter = DatabaseComponent.extend({
         return this._db.getRecord("webclient", "actions", data.action_id);
     },
 
+    /**
+     * @returns {Promise[Object]}
+     */
     translations: function () {
         return this._db.getRecord("webclient", "userdata", "translations");
     },
@@ -390,9 +381,6 @@ const Exporter = DatabaseComponent.extend({
                     }
                 }
             }
-
-            console.log("------------------------------- SEARCH READ LLLLLL");
-            console.log(records);
 
             return resolve({
                 length: records_count,

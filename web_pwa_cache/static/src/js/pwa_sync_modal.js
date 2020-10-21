@@ -4,13 +4,14 @@ odoo.define("web_pwa_cache.PWASyncModal", function (require) {
     var core = require('web.core');
     var Dialog = require('web.Dialog');
     var Widget = require("web.Widget");
-    var WebClient = require("web.WebClient");
-    var BroadcastSWMixin = require("web_pwa_cache.BroadcastSWMixin");
 
     var QWeb = core.qweb;
     var _t = core._t;
 
     var PWASyncModal = Widget.extend({
+        /**
+         * @override
+         */
         init: function(records, options) {
             this._super.apply(this, arguments);
             this.records = records;

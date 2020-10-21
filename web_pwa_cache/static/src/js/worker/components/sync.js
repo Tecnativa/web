@@ -6,6 +6,9 @@
  * This class is used to manage sync operations
  */
 const Sync = DatabaseComponent.extend({
+    /**
+     * @returns {Promise}
+     */
     getSyncRecords: function() {
         return new Promise((resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["sync"], "readonly");
@@ -23,6 +26,11 @@ const Sync = DatabaseComponent.extend({
         });
     },
 
+    /**
+     * @param {Number} index
+     * @param {Object} data
+     * @returns {Promise}
+     */
     updateSyncRecord: function (index, data) {
         return new Promise((resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["sync"], "readwrite");
@@ -50,6 +58,10 @@ const Sync = DatabaseComponent.extend({
         });
     },
 
+    /**
+     * @param {Number} index
+     * @returns {Promise}
+     */
     removeSyncRecord: function (index) {
         return new Promise((resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["sync"], "readwrite");

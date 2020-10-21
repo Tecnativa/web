@@ -15,11 +15,9 @@ PWA.include({
         this._exporter = new Exporter(this._db);
         this._config = new Config(this._db);
         this._sync = new Sync(this._db);
-        console.log("----------- INITIALIZE PWA!!");
         this._dbLoadPromise = this._db
             .initDatabase("webclient", this._onUpgradeWebClientDB)
             .then(() => {
-                console.log("--------- DATABASE INITIALZIED!");
                 return this._config.start().then(() => {
                     this._sendConfigToClient();
                     this._isLoaded = true;
@@ -28,92 +26,76 @@ PWA.include({
             });
     },
 
-    // /**
-    //  * @override
-    //  */
-    // installWorker: function () {
-    //     console.log("---- PASA INSTALLL");
-    //     this._dbLoadPromise = this._db.initDatabase(
-    //         "webclient",
-    //         this._onUpgradeWebClientDB
-    //     );
-    //     return Promise.all([
-    //         this._dbLoadPromise,
-    //         this._super.apply(this, arguments),
-    //     ]).then(() => {
-    //         console.log("--------- DATABASE INITIALZIED!");
-    //         return this._config.start().then(() => {
-    //             this._sendConfigToClient();
-    //             this._isLoaded = true;
-    //             return true;
-    //         });
-    //     });
-    // },
-
-    // /**
-    //  * @override
-    //  */
-    // activateWorker: function () {
-    //     console.log("---- PASA INSTALLL");
-    //     this._dbLoadPromise = this._db.initDatabase(
-    //         "webclient",
-    //         this._onUpgradeWebClientDB
-    //     );
-    //     return Promise.all([
-    //         this._dbLoadPromise,
-    //         this._super.apply(this, arguments),
-    //     ]).then(() => {
-    //         console.log("--------- DATABASE INITIALZIED!");
-    //         return this._config.start().then(() => {
-    //             this._sendConfigToClient();
-    //             this._isLoaded = true;
-    //             return true;
-    //         });
-    //     });
-    // },
-
     /**
+     * Intercepts 'POST' request.
+     * If doesn't run the PWA in standalone mode all request goes
+     * through network and will be cached.
+     * If run in standalone mode:
+     *  - online:
+     *      If is a CUD operation goes through network, if fails tries from cache.
+     *      Other requests goes through cache directly, if fails tries network.
+     *  - offline: Tries cache
      * @override
      */
     processRequest: function (request) {
         // Only process 'application/json'
-        // Strategy: Cache + Try Background Network Request
-        console.log("----- PROCES CACHE");
-        console.log(this._config.isOfflineMode());
         if (
-            this._config.isOfflineMode() &&
             request.method === "POST" &&
             request.headers.get("Content-Type") === "application/json"
         ) {
             return new Promise(async (resolve, reject) => {
-                const request_cloned_net = request.clone();
                 const request_cloned_cache = request.clone();
-                // Tries to process the request over the network in the background
-                // try {
-                //     fetch(request).then(async (response_net) => {
-                //         request_cloned_net
-                //             .json()
-                //             .then((data) => this._processResponse(response_net, data));
-                //         return true;
-                //     });
-                // } catch (err) {
-                //     // do nothing.
-                // }
-                try {
-                    const response_cache = await this._tryFromCache(
-                        request_cloned_cache
-                    );
-                    console.log("------------- TRY FROM CACHE!!!");
-                    console.log(response_cache);
-                    if (response_cache) {
-                        return resolve(response_cache);
+
+                let need_try_network = true;
+                if (this._config.isStandaloneMode()) {
+                    // Try CUD operations
+                    // Methodology: Network first
+                    if (!this._config.isOfflineMode()) {
+                        const crud_oper = this._getCRUDOperation(request_cloned_cache);
+                        if (['create', 'unlink', 'write'].indexOf(crud_oper) !== -1) {
+                            need_try_network = false;
+                            const request_cloned_net = request.clone();
+                            const response_net = await this._tryFromNetwork(request_cloned_net);
+                            if (response_net) {
+                                return resolve(response_net);
+                            }
+                        }
                     }
-                } catch (err) {
-                    console.log(
-                        "[ServiceWorker] The request can't be processed: Cached content not found! Fallback to default browser behaviour..."
-                    );
-                    console.log(err);
+
+                    // Other request (or network fails) go directly from cache
+                    try {
+                        const response_cache = await this._tryFromCache(
+                            request_cloned_cache
+                        );
+                        if (response_cache) {
+                            return resolve(response_cache);
+                        }
+                    } catch (err) {
+                        console.log(
+                            "[ServiceWorker] The request can't be processed: Cached content not found! Fallback to default browser behaviour..."
+                        );
+                        console.log(err);
+                        this.postClientPageMessage({
+                            type: "PWA_CACHE_FAIL",
+                            error: err,
+                            url: request_cloned_cache.url.pathname,
+                        });
+                    }
+
+                    if (need_try_network) {
+                        const request_cloned_net = request.clone();
+                        const response_net = await this._tryFromNetwork(request_cloned_net);
+                        return resolve(response_net);
+                    }
                 }
+                // else {
+                //     // No standalone mode, so go throught network and cache the response
+                //     const request_cloned_net = request.clone();
+                //     const request_data = await request_cloned_net.json();
+                //     const response_net = await fetch(request);
+                //     this._processResponse(response_net, request_data);
+                //     return resolve(response_net);
+                // }
 
                 return reject();
             });
@@ -121,6 +103,38 @@ PWA.include({
         return this._super.apply(this, arguments);
     },
 
+    /**
+     * Try obtain the CRUD operation of the request
+     *
+     * @param {FetchRequest} request_cloned
+     * @returns {String}
+     */
+    _getCRUDOperation: function (request_cloned) {
+        const url = new URL(request_cloned.url);
+        if (url.pathname.startsWith('/web/dataset/call_kw') || url.pathname.startsWith('/web/dataset/call')) {
+            const pathname_parts = url.pathname.split("/");
+            const method_name = pathname_parts[5];
+            return method_name;
+        }
+        return "";
+    },
+
+    /**
+     * Creates the schema of the used database:
+     *  - views: Store views
+     *  - actions: Store actions
+     *  - defaults: Store defaults model values
+     *  - model: Store model records
+     *  - sync: Store transactions to synchronize
+     *  - config: Store PWA configurations values
+     *  - functions: Store function calls results
+     *  - post: Store post calls results
+     *  - filters: Store filters
+     *  - userdata: Store user data configuration values
+     *  - onchange: Store onchange vales
+     *
+     * @param {IDBDatabaseEvent} evt
+     */
     _onUpgradeWebClientDB: function (evt) {
         console.log("[ServiceWorker] Generating DB Schema...");
         const db = evt.target.result;
@@ -155,18 +169,29 @@ PWA.include({
     },
 
     /**
+     * @param {Promise} request_cloned
+     */
+    _tryFromNetwork: function (request_cloned) {
+        return new Promise(async (resolve, reject) => {
+            const response_net = await fetch(request_cloned);
+            if (response_net) {
+                const request_data = await request_cloned.json();
+                this._processResponse(response_net, request_data);
+                return resolve(response_net);
+            }
+            return reject();
+        });
+    },
+
+    /**
      * @returns {Promise[Response]}
      */
     _tryFromCache: function (request_cloned) {
         return new Promise(async (resolve, reject) => {
             const request_data = await request_cloned.json();
             const url = new URL(request_cloned.url);
-            console.log("MIRIADNO..");
-            console.log(url.pathname);
             for (let [key, fnct] of Object.entries(this._routes.out)) {
                 if (url.pathname.startsWith(key)) {
-                    console.log("----- ENCUENTRA!!");
-                    console.log(`${url.pathname} ---- ${key}`);
                     return resolve(this[fnct](url, request_data));
                 }
             }
@@ -180,6 +205,13 @@ PWA.include({
         });
     },
 
+    /**
+     * Process request response to cache the values
+     *
+     * @param {FetchResponse} response
+     * @param {Object} request_data
+     * @return {Promise}
+     */
     _processResponse: function (response, request_data) {
         console.log("[ServiceWorker] Processing Response...");
         if (!response) {
@@ -188,7 +220,6 @@ PWA.include({
         const response_cloned = response.clone();
         return new Promise(async (resolve) => {
             const response_data = await response_cloned.json();
-            console.log(response_data);
             const url = new URL(response_cloned.url);
             for (let [key, fnct] of Object.entries(this._routes.in)) {
                 if (url.pathname.startsWith(key)) {
@@ -200,9 +231,12 @@ PWA.include({
         });
     },
 
+    /**
+     * Send configuration state to the client pages
+     *
+     * @returns {Promise}
+     */
     _sendConfigToClient: function () {
-        console.log("---- CONFIG CLIENT");
-        console.log(this._config.state);
         this.postClientPageMessage({
             type: "PWA_INIT_CONFIG",
             data: this._config.state,
@@ -211,6 +245,12 @@ PWA.include({
         return Promise.resolve();
     },
 
+    /**
+     * Send transactions to synchronize to the client pages
+     * This will open a dialog to display the transactions.
+     *
+     * @returns {Promise}
+     */
     _sendSyncRecordsToClient: function () {
         return this._sync.getSyncRecords().then((records) => {
             this.postClientPageMessage({
@@ -220,6 +260,12 @@ PWA.include({
         });
     },
 
+    /**
+     * Send transactions to synchronize to Odoo
+     * If one fails, all the process will be aborted.
+     *
+     * @returns {Promise}
+     */
     _startSync: function () {
         return new Promise(async (resolve, reject) => {
             const records = await this._sync.getSyncRecords();
@@ -253,6 +299,12 @@ PWA.include({
         });
     },
 
+    /**
+     * This will update the counter of transactions to synchronize on the
+     * client pages.
+     *
+     * @returns {Promise}
+     */
     _updateSyncCount: function () {
         this._sync.getSyncRecords().then((records) => {
             this.postClientPageMessage({

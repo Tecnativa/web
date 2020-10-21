@@ -4,7 +4,9 @@
 
 PWA.include({
    /**
-     * @override
+     * Launch all prefetch process
+     *
+     * @returns {Promise}
      */
     _prefetchDataPost: function () {
         return new Promise((resolve) => {
@@ -12,7 +14,7 @@ PWA.include({
                 if (this._config.isOfflineMode()) {
                     return resolve();
                 }
-                this._start_prefetch_date = new Date();
+                this._start_prefetch_date = DateToOdooFormat(new Date());
                 this.postClientPageMessage({type: "PREFETCH_MODAL_SHOW"});
                 return resolve(
                     Promise.all([
@@ -24,28 +26,35 @@ PWA.include({
                         this._prefetchOnchangeData(),
                     ]).then(() => {
                         this.postClientPageMessage({type: "PREFETCH_MODAL_HIDE"});
+                        // If have transactions to sync. tell it to the user
+                        const records = this._sync.getSyncRecords();
+                        if (records.length) {
+                            this.postClientPageMessage({
+                                type: "PWA_SYNC_NEED_ACTION",
+                                count: records.length,
+                            });
+                        }
                     })
                 );
             });
         });
     },
 
+    /**
+     * Prefetch model data:
+     *  - Get records
+     *  - Vacuum records
+     *  - Get filters
+     *
+     * @returns {Promise}
+     */
     _prefetchModelData: function () {
         return new Promise(async (resolve) => {
-            let domain_forced = [];
-            if (this._prefetch_last_update) {
-                console.log(
-                    `[ServiceWorker] Prefetching records from ${this._prefetch_last_update}`
-                );
-                domain_forced = [["write_date", ">=", this._prefetch_last_update]];
-            }
             const [response_pd, request_data_pd] = await this._rpc.sendJSonRpc(
                 "/pwa/prefetch/model"
             );
             let response_data = await response_pd.json();
             const prefetched_models = response_data.result;
-            console.log("----------- PREFETCH MODEL");
-            console.log(prefetched_models);
             const num_models = prefetched_models.length + 1;
             for (const index in prefetched_models) {
                 const model_def = prefetched_models[index];
@@ -64,8 +73,6 @@ PWA.include({
                 if (cur_model_record?.prefetch_last_update) {
                     domain_forced = [["write_date", ">=", cur_model_record.prefetch_last_update]];
                 }
-                console.log("Domain Prefetch-------");
-                console.log(domain_forced);
                 // Update new records
                 const [response, request_data] = await this._rpc.datasetJSonRpc(
                     "search_read",
@@ -77,7 +84,7 @@ PWA.include({
                 this._processResponse(response, request_data).then(() => {
                     this._db.updateRecord("webclient", "records", "model", model_def.model, {
                         orderby: model_def.orderby,
-                        prefetch_last_update: DateToOdooFormat(this._start_prefetch_date),
+                        prefetch_last_update: this._start_prefetch_date,
                     });
                 });
                 // Vacuum old records
@@ -128,8 +135,17 @@ PWA.include({
         });
     },
 
+    /**
+     * Prefetch actions:
+     *  - Get actions
+     *  - Get views
+     *  - Get model default values (per view)
+     *
+     * @returns {Promise}
+     */
     _prefetchActionData: function () {
         return new Promise(async (resolve) => {
+            const prefetch_last_update = await this._config.get("prefetch_action_last_update");
             this.postClientPageMessage({
                 type: "PREFETCH_MODAL_TASK_INFO",
                 id: "action_data",
@@ -137,7 +153,7 @@ PWA.include({
             });
             // Get prefetching metadata
             let [response, request_data] = await this._rpc.sendJSonRpc("/pwa/prefetch/action", {
-                last_update: this._prefetch_last_update,
+                last_update: prefetch_last_update,
             });
             // Prefetch Actions
             const response_data = (await response.json()).result;
@@ -239,12 +255,19 @@ PWA.include({
                 message: "Completed!",
                 progress: 1,
             });
+            await this._config.set("prefetch_action_last_update", this._start_prefetch_date);
             return resolve();
         });
     },
 
+    /**
+     * Prefetch generic defined post calls
+     *
+     * @returns {Promise}
+     */
     _prefetchPostData: function () {
         return new Promise(async (resolve) => {
+            const prefetch_last_update = await this._config.get("prefetch_post_last_update");
             this.postClientPageMessage({
                 type: "PREFETCH_MODAL_TASK_INFO",
                 id: "post_data",
@@ -252,12 +275,10 @@ PWA.include({
             });
             // Get prefetching metadata
             let [response, _] = await this._rpc.sendJSonRpc("/pwa/prefetch/post", {
-                last_update: this._prefetch_last_update,
+                last_update: prefetch_last_update,
             });
             // Prefetch Posts
             const response_data = (await response.json()).result;
-            console.log("---------- PREFETCH POST DATA");
-            console.log(response_data);
             if (response_data) {
                 const num_posts = response_data.length + 1;
                 for (const index in response_data) {
@@ -294,12 +315,19 @@ PWA.include({
                 message: "Completed!",
                 progress: 1,
             });
+            await this._config.set("prefetch_post_last_update", this._start_prefetch_date);
             return resolve();
         });
     },
 
+    /**
+     * Prefetch onchange values
+     *
+     * @returns {Promise}
+     */
     _prefetchOnchangeData: function () {
         return new Promise(async (resolve) => {
+            const prefetch_last_update = await this._config.get("prefetch_onchange_last_update");
             this.postClientPageMessage({
                 type: "PREFETCH_MODAL_TASK_INFO",
                 id: "onchange_data",
@@ -309,8 +337,6 @@ PWA.include({
             let [response, _] = await this._rpc.sendJSonRpc("/pwa/prefetch/onchange");
             // Prefetch Onchange
             const response_data = (await response.json()).result;
-            console.log("---------- PREFETCH ONCHANGE DATA");
-            console.log(response_data);
             if (response_data) {
                 this._importer.saveOnchanges(response_data);
             }
@@ -321,12 +347,19 @@ PWA.include({
                 message: "Completed!",
                 progress: 1,
             });
+            await this._config.set("prefetch_onchange_last_update", this._start_prefetch_date);
             return resolve();
         });
     },
 
+    /**
+     * Prefect widgets views (clientqweb)
+     *
+     * @returns {Promise}
+     */
     _prefetchViewData: function () {
         return new Promise(async (resolve) => {
+            const prefetch_last_update = await this._config.get("prefetch_view_last_update");
             this.postClientPageMessage({
                 type: "PREFETCH_MODAL_TASK_INFO",
                 id: "view_data",
@@ -334,7 +367,7 @@ PWA.include({
             });
             // Get prefetching metadata
             let [response] = await this._rpc.sendJSonRpc("/pwa/prefetch/view", {
-                last_update: this._prefetch_last_update,
+                last_update: prefetch_last_update,
             });
             // Prefetch Actions
             const response_data = (await response.json()).result;
@@ -364,12 +397,19 @@ PWA.include({
                 message: "Completed!",
                 progress: 1,
             });
+            await this._config.set("prefetch_view_last_update", this._start_prefetch_date);
             return resolve();
         });
     },
 
+    /**
+     * Prefetch User Data
+     *
+     * @returns {Promise}
+     */
     _prefetchUserData: function () {
         return new Promise(async (resolve) => {
+            const prefetch_last_update = await this._config.get("prefetch_userdata_last_update");
             this.postClientPageMessage({
                 type: "PREFETCH_MODAL_TASK_INFO",
                 id: "user_data",
@@ -377,7 +417,7 @@ PWA.include({
                 progress: 0,
             });
             let [response, request_data] = await this._rpc.sendJSonRpc("/pwa/prefetch/userdata", {
-                last_update: this._prefetch_last_update,
+                last_update: prefetch_last_update,
             });
             const response_data = (await response.json()).result;
             if (response_data) {
@@ -405,6 +445,7 @@ PWA.include({
                 message: "Completed!",
                 progress: 1,
             });
+            await this._config.set("prefetch_userdata_last_update", this._start_prefetch_date);
             return resolve();
         });
     },

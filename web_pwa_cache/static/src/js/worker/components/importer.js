@@ -10,6 +10,7 @@ const Importer = DatabaseComponent.extend({
     /**
      * @param {String} model
      * @param {Object} data
+     * @returns {Promise}
      */
     name_search: function (model, data) {
         const records = _.map(data, (record) => {
@@ -21,6 +22,7 @@ const Importer = DatabaseComponent.extend({
     /**
      * @param {String} model
      * @param {Object} data
+     * @returns {Promise}
      */
     name_get: function (model, data) {
         return this.name_search(model, data);
@@ -29,6 +31,7 @@ const Importer = DatabaseComponent.extend({
     /**
      * @param {String} model
      * @param {Object} data
+     * @returns {Promise}
      */
     load_views: function (model, data) {
         const vtype = Object.keys(data.fields_views)[0];
@@ -42,6 +45,7 @@ const Importer = DatabaseComponent.extend({
     /**
      * @param {String} model
      * @param {Object} data
+     * @returns {Promise}
      */
     default_get: function (model, data) {
         return this._db.getRecord("webclient", "defaults", model).then((record) => {
@@ -53,6 +57,11 @@ const Importer = DatabaseComponent.extend({
         });
     },
 
+    /**
+     * @param {String} model
+     * @param {Object} data
+     * @returns {Promise}
+     */
     load_menus: function (model, data) {
         return this._db.saveRecord("webclient", "userdata", {
             param: "menus",
@@ -63,11 +72,18 @@ const Importer = DatabaseComponent.extend({
     /**
      * @param {String} model
      * @param {Object} data
+     * @returns {Promise}
      */
     read: function (model, data) {
         return this._mergeModelRecord(model, data);
     },
 
+    /**
+     * @param {String} model
+     * @param {Object} data
+     * @param {Object} request_params
+     * @returns {Promise}
+     */
     get_filters: function (model, data, request_params) {
         return this._db.saveRecord("webclient", "filters", {model: request_params.args[0], filters: data});
     },
@@ -89,11 +105,16 @@ const Importer = DatabaseComponent.extend({
 
     /**
      * @param {Object} data
+     * @returns {Promise}
      */
     action_load: function (data) {
         return this._db.saveRecord("webclient", "actions", data);
     },
 
+    /**
+     * @param {Object} data
+     * @returns {Promise}
+     */
     translations: function (data) {
         return this._db.saveRecord("webclient", "userdata", {
             param: "translations",
@@ -119,6 +140,10 @@ const Importer = DatabaseComponent.extend({
         });
     },
 
+    /**
+     * @param {Array[Object]} onchanges
+     * @returns {Promise}
+     */
     saveOnchanges: function (onchanges) {
         return new Promise(async (resolve) => {
             for (const onchange of onchanges) {
@@ -139,6 +164,7 @@ const Importer = DatabaseComponent.extend({
      *
      * @param {String} model
      * @param {Array[int]} oids
+     * @returns {Promise[Array[Number]]}
      */
     _vacuumRecords: function (model, oids) {
         return new Promise(async (resolve) => {

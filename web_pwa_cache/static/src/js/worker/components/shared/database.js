@@ -18,10 +18,9 @@ const DatabaseComponent = OdooClass.extend({
      * @param {String} model
      * @param {Object} data
      * @param {String} domain
+     * @returns {Promise}
      */
     _mergeModelRecord: function(model, data, domain="[]") {
-        console.log("-----------------------------------------------------------MEZCLANDO!!!!");
-        console.log(data);
         return new Promise(async (resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["records"], "readwrite");
             if (objectStore) {
@@ -31,10 +30,7 @@ const DatabaseComponent = OdooClass.extend({
                         const tasks = [];
                         let mainUpdated = false;
                         for (const record of evt.target.result) {
-                            console.log("----------- REVISANDO");
-                            console.log(`${record.domain} ----> ${domain}`);
                             if (record.domain === domain) {
-                                console.log("----- PASA MAIN!!");
                                 mainUpdated = true;
                             }
                             let cur_records = record.records || {};
@@ -45,7 +41,6 @@ const DatabaseComponent = OdooClass.extend({
                                     continue;
                                 }
 
-                                //records.push(_deepObjectExtend(obj, rec));
                                 records.push(_.extend({}, obj || {}, rec));
                             }
                             cur_records = _.reject(cur_records, item => _.findIndex(records, {id: item.id}) !== -1);
@@ -53,17 +48,13 @@ const DatabaseComponent = OdooClass.extend({
                                 const request = objectStore.put(_.extend(record, {records: cur_records.concat(records)}));
                                 request.onsuccess = resolve;
                                 request.onerror = reject;
-                                //resolve();
                             }));
                         }
                         if (!mainUpdated) {
-                            console.log("---- PASA POR KI!");
-                            console.log(evt.target.result);
                             tasks.push(new Promise((resolve, reject) => {
                                 const request = objectStore.add({model: model, domain: "[]", orderby: "id", records: data});
                                 request.onsuccess = resolve;
                                 request.onerror = reject;
-                                //resolve();
                             }));
                         }
 
@@ -73,10 +64,7 @@ const DatabaseComponent = OdooClass.extend({
                         reject();
                     };
                 });
-                console.log("------------------ HACE LAS TAREAD");
-                console.log(tasks.length);
                 await Promise.all(tasks);
-                console.log("--- TERMINA LAS TAREAS!");
                 return resolve();
             } else {
                 return reject();
@@ -84,6 +72,12 @@ const DatabaseComponent = OdooClass.extend({
         });
     },
 
+    /**
+     * @param {String} model
+     * @param {Number} rec_id
+     * @param {Object} data
+     * @returns {Promise}
+     */
     _updateModelRecord: function (model, rec_id, data) {
         return new Promise((resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["records"], "readwrite");
@@ -172,6 +166,11 @@ const DatabaseComponent = OdooClass.extend({
         });
     },
 
+    /**
+     * @param {String} model
+     * @param {Array[Number]} rc_ids
+     * @returns {Promise}
+     */
     _removeRecords: function(model, rc_ids) {
         const self = this;
         return new Promise((resolve, reject) => {
@@ -196,7 +195,7 @@ const DatabaseComponent = OdooClass.extend({
 
     /**
      * Basic implementation to query a collection using Odoo domain syntax
-     * Doesn't support 'child_of'!
+     * Doesn't support 'child_of' and '=?'!
      * @param {Array[Object]} records
      * @param {String|Array} domain
      * @returns {Array[Object]}
@@ -315,16 +314,5 @@ const DatabaseComponent = OdooClass.extend({
             return value[0];
         }
         return value;
-    },
-
-    _deepObjectExtend: function(target, source) {
-        for (var prop in source) {
-            if (prop in target) {
-                this._deepObjectExtend(target[prop], source[prop]);
-            } else {
-                target[prop] = source[prop];
-            }
-        }
-        return target;
     },
 });

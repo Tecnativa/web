@@ -59,7 +59,7 @@ odoo.define("web_pwa_cache.UserMenu", function (require) {
             };
         },
 
-        _setPWAMode: function(mode, need_send) {
+        _setPWAMode: function(mode) {
             this._pwaManager.setPWAMode(mode);
         },
     });

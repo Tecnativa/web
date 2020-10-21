@@ -16,12 +16,11 @@ class PWACache(models.Model):
     _description = "PWA Cache"
 
     DEFAULT_PYTHON_CODE = """# Available variables:
-#  - env: Odoo Environment on which the action is triggered
-#  - model: Odoo Model of the record on which the action is triggered; is a void recordset
-#  - record: record on which the action is triggered; may be void
-#  - records: recordset of all records on which the action is triggered in multi-mode; may be void
+#  - env: Odoo Environment on which the request is triggered
+#  - user, uid: The user that trigger the request
+#  - record: This record
 #  - time, datetime, dateutil, timezone: useful Python libraries
-#  - Warning: Warning Exception to use with raise
+#  - b64encode, b64decode: To work with base64
 # To return an params, assign: params = [...]\n\n\n\n"""
 
     name = fields.Char("Name", required=True)
@@ -73,13 +72,15 @@ class PWACache(models.Model):
                 return eval_context["params"]
         return [False]
 
-    @api.model
+    @api.multi
     def _get_eval_context(self, action=None):
         """ evaluation context to pass to safe_eval """
+        self.ensure_one()
         return {
             "env": self.env,
             "uid": self._uid,
             "user": self.env.user,
+            "record": self,
             "time": time,
             "datetime": datetime,
             "dateutil": dateutil,

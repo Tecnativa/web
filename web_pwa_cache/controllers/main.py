@@ -46,13 +46,13 @@ class PWA(PWA):
         ] + request.env["pwa.cache"].get_client_qweb_urls()
         return res
 
-    def _pwa_prefetch_action(self, last_update):
+    def _pwa_prefetch_action(self, last_update, **kwargs):
         records = request.env["pwa.cache"].search([("cache_type", "=", "model")])
         domain = [
             ("res_model", "in", records.mapped("model_id.model")),
         ]
         if last_update:
-            domain.append(("write_date", ">", last_update))
+            domain.append(("write_date", ">=", last_update))
         actions = request.env["ir.actions.act_window"].search(domain)
         ir_model_obj = request.env["ir.model"]
         views = []
@@ -69,7 +69,7 @@ class PWA(PWA):
             )
         return {"actions": actions.ids, "views": views}
 
-    def _pwa_prefetch_model(self):
+    def _pwa_prefetch_model(self, **kwargs):
         records = request.env["pwa.cache"].search([("cache_type", "=", "model")])
         return records.mapped(
             lambda x: {
@@ -80,10 +80,10 @@ class PWA(PWA):
             }
         )
 
-    def _pwa_prefetch_model(self):
+    def _pwa_prefetch_clientqweb(self, **kwargs):
         return request.env["pwa.cache"].get_client_qweb_refs()
 
-    def _pwa_prefetch_post(self):
+    def _pwa_prefetch_post(self, **kwargs):
         records = request.env["pwa.cache"].search([("cache_type", "=", "post")])
         post_defs = []
         for record in records:
@@ -96,19 +96,19 @@ class PWA(PWA):
             )
         return post_defs
 
-    def _pwa_prefetch_userdata(self):
+    def _pwa_prefetch_userdata(self, **kwargs):
         from odoo.addons.web.controllers.main import module_boot
         return {
             'list_modules': module_boot(),
             'lang': request.env.lang,
         }
 
-    def _pwa_prefetch_onchange(self):
-        records = request["pwa.cache"].search([("cache_type", "=", "onchange")])
+    def _pwa_prefetch_onchange(self, **kwargs):
+        records = request.env["pwa.cache"].search([("cache_type", "=", "onchange")])
         onchanges = []
         for record in records:
             e_context = record._get_eval_context()
-            record_obj = request[record.model_id.model]
+            record_obj = request.env[record.model_id.model]
             defaults = record_obj.default_get(record_obj._fields)
             params_list = record.run_cache_code(eval_context=e_context)
             onchange_spec = record_obj._onchange_spec()
@@ -126,7 +126,8 @@ class PWA(PWA):
 
     @route("/pwa/prefetch/<string:cache_type>", type="json", auth="public")
     def pwa_prefetch(self, cache_type, **kwargs):
-        available_types = {opt[0] for opt in self.env['pwa.cache']._fields['cache_type'].selection}
+        available_types = {opt[0] for opt in request.env['pwa.cache']._fields['cache_type'].selection}
+        available_types.add('action')
         if cache_type in available_types:
             prefetch_method = getattr(self, "_pwa_prefetch_{}".format(cache_type))
             if prefetch_method:
