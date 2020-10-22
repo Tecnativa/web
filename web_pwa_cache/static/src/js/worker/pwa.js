@@ -38,24 +38,24 @@ PWA.include({
      * @override
      */
     processRequest: function (request) {
+        console.log("------ TRYE CHACE PROCESS REQUEST");
         // Only process 'application/json'
         if (
             request.method === "POST" &&
             request.headers.get("Content-Type") === "application/json"
         ) {
+            console.log("------ LAUNCH TRY CACHE post");
             return new Promise(async (resolve, reject) => {
-                const request_cloned_cache = request.clone();
-
+                console.log("------ LAUNCH TRY CACHE post start");
                 let need_try_network = true;
                 if (this._config.isStandaloneMode()) {
                     // Try CUD operations
                     // Methodology: Network first
                     if (!this._config.isOfflineMode()) {
-                        const crud_oper = this._getCRUDOperation(request_cloned_cache);
+                        const crud_oper = this._getCRUDOperation(request);
                         if (['create', 'unlink', 'write'].indexOf(crud_oper) !== -1) {
                             need_try_network = false;
-                            const request_cloned_net = request.clone();
-                            const response_net = await this._tryFromNetwork(request_cloned_net);
+                            const response_net = await this._tryFromNetwork(request);
                             if (response_net) {
                                 return resolve(response_net);
                             }
@@ -64,28 +64,32 @@ PWA.include({
 
                     // Other request (or network fails) go directly from cache
                     try {
-                        const response_cache = await this._tryFromCache(
-                            request_cloned_cache
-                        );
-                        if (response_cache) {
-                            return resolve(response_cache);
-                        }
+                        console.log("------ LAUNCH TRY CACHE");
+                        const response_cache = await this._tryFromCache(request);
+                        console.log("------- END TRY CACHE");
+                        console.log(response_cache);
+                        return resolve(response_cache);
                     } catch (err) {
                         console.log(
                             "[ServiceWorker] The request can't be processed: Cached content not found! Fallback to default browser behaviour..."
                         );
                         console.log(err);
-                        this.postClientPageMessage({
-                            type: "PWA_CACHE_FAIL",
-                            error: err,
-                            url: request_cloned_cache.url.pathname,
-                        });
+                        if (this._config.isOfflineMode()) {
+                            const request_url = new URL(request.url);
+                            this.postClientPageMessage({
+                                type: "PWA_CACHE_FAIL",
+                                error: err,
+                                url: request_url.pathname,
+                            });
+                        }
                     }
 
-                    if (need_try_network) {
-                        const request_cloned_net = request.clone();
-                        const response_net = await this._tryFromNetwork(request_cloned_net);
+                    if (need_try_network && !this._config.isOfflineMode()) {
+                        const response_net = await this._tryFromNetwork(request);
                         return resolve(response_net);
+                    } else if (this._config.isOfflineMode()) {
+                        // Avoid default browser behaviour
+                        return resolve(false);
                     }
                 }
                 // else {
@@ -171,12 +175,13 @@ PWA.include({
     /**
      * @param {Promise} request_cloned
      */
-    _tryFromNetwork: function (request_cloned) {
+    _tryFromNetwork: function (request) {
         return new Promise(async (resolve, reject) => {
-            const response_net = await fetch(request_cloned);
+            const request_cloned_net = request.clone();
+            const response_net = await fetch(request);
             if (response_net) {
-                const request_data = await request_cloned.json();
-                this._processResponse(response_net, request_data);
+                const request_data = await request_cloned_net.json();
+                //this._processResponse(response_net, request_data);
                 return resolve(response_net);
             }
             return reject();
@@ -186,22 +191,29 @@ PWA.include({
     /**
      * @returns {Promise[Response]}
      */
-    _tryFromCache: function (request_cloned) {
+    _tryFromCache: function (request) {
         return new Promise(async (resolve, reject) => {
-            const request_data = await request_cloned.json();
-            const url = new URL(request_cloned.url);
+            const request_cloned_cache = request.clone();
+            const request_data = await request_cloned_cache.json();
+            const url = new URL(request_cloned_cache.url);
             for (let [key, fnct] of Object.entries(this._routes.out)) {
                 if (url.pathname.startsWith(key)) {
-                    return resolve(this[fnct](url, request_data));
+                    try {
+                        console.log("-------------- TRY FROM CACHE!");
+                        console.log(url.pathname);
+                        return resolve(await this[fnct].call(this, url, request_data));
+                    } catch (err) {
+                        return reject(err);
+                    }
                 }
             }
             // Generic Post Caching
             console.log("[ServiceWorker] Caching generic POST request")
-            const cached_response = this._routeOutGenericPost(url, request_data);
-            if (cached_response) {
-                return resolve(cached_response);
+            try {
+                return resolve(await this._routeOutGenericPost(url, request_data));
+            } catch (err) {
+                return reject(err);
             }
-            return reject();
         });
     },
 
@@ -223,7 +235,7 @@ PWA.include({
             const url = new URL(response_cloned.url);
             for (let [key, fnct] of Object.entries(this._routes.in)) {
                 if (url.pathname.startsWith(key)) {
-                    await this[fnct](url, response_data, request_data);
+                    await this[fnct].call(this, url, response_data, request_data);
                     break;
                 }
             }

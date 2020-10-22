@@ -14,14 +14,15 @@ const Exporter = DatabaseComponent.extend({
      */
     name_search: function (model, data) {
         return new Promise(async (resolve, reject) => {
-            const [records] = await this._getModelRecords(model, "[]", data.kwargs.limit);
-            if (records) {
+            try {
+                const [records] = await this._getModelRecords(model, "[]", data.kwargs.limit);
                 const filtered_records = _.map(records, (item) =>
                     _.values(_.pick(item, ["id", "display_name"]))
                 );
                 return resolve(filtered_records);
+            } catch (err) {
+                return reject(err);
             }
-            return reject();
         });
     },
 
@@ -32,12 +33,9 @@ const Exporter = DatabaseComponent.extend({
      */
     name_get: function (model, data) {
         return new Promise(async (resolve, reject) => {
-            const [records] = await this._getModelRecords(model);
-            if (records) {
+            try {
+                const [records] = await this._getModelRecords(model);
                 let record_ids = data.args;
-                console.log("---- NAME GET");
-                console.log(data);
-                console.log(record_ids);
                 if (!record_ids || !_.some(record_ids)) {
                     return resolve([]);
                 }
@@ -48,12 +46,16 @@ const Exporter = DatabaseComponent.extend({
                     records,
                     (item) => record_ids.indexOf(item.id) !== -1
                 );
+                if (!filtered_records.length) {
+                    return reject();
+                }
                 filtered_records = _.map(filtered_records, (item) =>
                     _.values(_.pick(item, ["id", "display_name"]))
                 );
                 return resolve(filtered_records);
+            } catch (err) {
+                return reject(err);
             }
-            return reject();
         });
     },
 
@@ -68,11 +70,12 @@ const Exporter = DatabaseComponent.extend({
             const field_changed = data.args[2];
             const params = {};
             params[field_changed] = modif_state[field_changed];
-            const record = await this._db.getRecord("webclient", "onchange", [model, field_changed, JSON.stringify(params)]);
-            if (!record) {
+            try {
+                const record = await this._db.getRecord("webclient", "onchange", [model, field_changed, JSON.stringify(params)]);
+                return resolve(record.changes);
+            } catch (err) {
                 return resolve({value:{}});
             }
-            return resolve(record.changes);
         });
     },
 
@@ -83,10 +86,8 @@ const Exporter = DatabaseComponent.extend({
      */
     read: function (model, data) {
         return new Promise(async (resolve, reject) => {
-            const [records] = await this._getModelRecords(data.model);
-            if (records) {
-                console.log("----- READ");
-                console.log(records);
+            try {
+                const [records] = await this._getModelRecords(data.model);
                 let filtered_records = _.filter(
                     records,
                     (item) => data.args[0].indexOf(item.id) !== -1
@@ -117,11 +118,10 @@ const Exporter = DatabaseComponent.extend({
                         }
                     }
                 }
-
-                console.log(filtered_records);
                 return resolve(filtered_records);
+            } catch (err) {
+                return reject(err);
             }
-            return reject();
         });
     },
 
@@ -131,46 +131,54 @@ const Exporter = DatabaseComponent.extend({
      * @returns {Promise[Boolean]}
      */
     write: function (model, data) {
-        return new Promise(async (resolve) => {
-            for (const rec_id of data.args[0]) {
-                const merge_data = {
-                    id: rec_id,
-                };
-                // Try to update 'display_name'
-                if ("name" in data.args[1]) {
-                    const cur_record = await this._getModelRecord(model, rec_id);
-                    merge_data.display_name = cur_record.display_name.replace(
-                        cur_record.name,
-                        data.args[1].name
-                    );
-                }
-                // Generate record with new values
-                const record = _.extend(merge_data, data.args[1]);
-                // Resolve x2x fields
-                const view_def = await this._db.getRecord("webclient", "views", model);
-                const data_fields = Object.keys(record);
-                for (const field of data_fields) {
-                    if (view_def.fields[field].type === "one2many") {
-                        const svalues = [];
-                        for (const command of merge_data[field]) {
-                            // TODO: Improve this to resolve all commands!!!
-                            if (command[0] === 4) {
-                                svalues.push(command[1]);
+        return new Promise(async (resolve, reject) => {
+            try {
+                for (const rec_id of data.args[0]) {
+                    const merge_data = {
+                        id: rec_id,
+                    };
+                    // Try to update 'display_name'
+                    if ("name" in data.args[1]) {
+                        const cur_record = await this._getModelRecord(model, rec_id);
+                        if (cur_record) {
+                            merge_data.display_name = cur_record.display_name.replace(
+                                cur_record.name,
+                                data.args[1].name
+                            );
+                        }
+                    }
+                    // Generate record with new values
+                    const record = _.extend(merge_data, data.args[1]);
+                    // Resolve x2x fields
+                    const view_def = await this._db.getRecord("webclient", "views", model);
+                    if (view_def) {
+                        const data_fields = Object.keys(record);
+                        for (const field of data_fields) {
+                            if (view_def.fields[field].type === "one2many") {
+                                const svalues = [];
+                                for (const command of merge_data[field]) {
+                                    // TODO: Improve this to resolve all commands!!!
+                                    if (command[0] === 4) {
+                                        svalues.push(command[1]);
+                                    }
+                                }
+                                record[field] = svalues;
+                            } else if (view_def.fields[field].type === "many2one") {
+                                const ref_record = await this._getModelRecord(view_def.fields[field].relation, merge_data[field]);
+                                record[field] = [merge_data[field], ref_record.display_name || ref_record.name];
                             }
                         }
-                        record[field] = svalues;
-                    } else if (view_def.fields[field].type === "many2one") {
-                        const ref_record = await this._getModelRecord(view_def.fields[field].relation, merge_data[field]);
-                        record[field] = [merge_data[field], ref_record.display_name || ref_record.name];
                     }
+                    await this._mergeModelRecord(model, [record], "[]");
                 }
-                await this._mergeModelRecord(model, [record], "[]");
+                this._db.saveRecord("webclient", "sync", {
+                    raw: data,
+                    date: (new Date()).getTime(),
+                });
+                return resolve(true);
+            } catch (err) {
+                return reject(err);
             }
-            this._db.saveRecord("webclient", "sync", {
-                raw: data,
-                date: (new Date()).getTime(),
-            });
-            return resolve(true);
         });
     },
 
@@ -180,55 +188,59 @@ const Exporter = DatabaseComponent.extend({
      * @returns {Promise[Number/String]}
      */
     create: function (model, data) {
-        return new Promise(async (resolve) => {
-            // TODO: Use other id's!!
-            // Create Offline Record
-            data.args = _.map(data.args, (item) => _.extend({id: 9000000000 + Number(_.uniqueId())}, item));
-            const context_defaults = data.kwargs.context;
-            const default_keys = _.filter(Object.keys(context_defaults), function (
-                item
-            ) {
-                return item.startsWith("default_");
-            });
-            const defaults = {};
-            for (const key of default_keys) {
-                const skey = key.substr(8); // 8 > Omit 'default_'
-                const svalue = context_defaults[key];
-                if (typeof svalue !== "object") {
-                    let view_def = await this._db.getRecord(
-                        "webclient",
-                        "views",
-                        model
-                    );
-                    if ("relation" in view_def.fields[skey]) {
-                        defaults[skey] = (
-                            await this.name_get(view_def.fields[skey].relation, {
-                                args: [[context_defaults[key]]],
-                            })
-                        )[0];
+        return new Promise(async (resolve, reject) => {
+            try {
+                // TODO: Use other id's!!
+                // Create Offline Record
+                data.args = _.map(data.args, (item) => _.extend({id: 9000000000 + Number(_.uniqueId())}, item));
+                const context_defaults = data.kwargs.context;
+                const default_keys = _.filter(Object.keys(context_defaults), function (
+                    item
+                ) {
+                    return item.startsWith("default_");
+                });
+                const defaults = {};
+                for (const key of default_keys) {
+                    const skey = key.substr(8); // 8 > Omit 'default_'
+                    const svalue = context_defaults[key];
+                    if (typeof svalue !== "object") {
+                        let view_def = await this._db.getRecord(
+                            "webclient",
+                            "views",
+                            model
+                        );
+                        if (view_def && "relation" in view_def.fields[skey]) {
+                            defaults[skey] = (
+                                await this.name_get(view_def.fields[skey].relation, {
+                                    args: [[context_defaults[key]]],
+                                })
+                            )[0];
+                        } else {
+                            defaults[skey] = context_defaults[key];
+                        }
                     } else {
                         defaults[skey] = context_defaults[key];
                     }
-                } else {
-                    defaults[skey] = context_defaults[key];
                 }
+                // Store Sync Record
+                this._db.saveRecord("webclient", "sync", {
+                    raw: data,
+                    date: (new Date()).getTime(),
+                });
+                data.args = _.map(data.args, (item) => _.extend(item, defaults));
+                data.args = _.map(data.args, (item) => {
+                    if (!item.name) {
+                        item.name = `Offline Record #${item.id}`;
+                    }
+                    return _.extend({display_name: item.name}, item);
+                });
+                console.log(data.args);
+                await this._mergeModelRecord(model, data.args, "[]");
+                const c_ids = _.map(data.args, "id");
+                return resolve(c_ids.length === 1?c_ids[0]:c_ids);
+            } catch (err) {
+                return reject(err);
             }
-            // Store Sync Record
-            this._db.saveRecord("webclient", "sync", {
-                raw: data,
-                date: (new Date()).getTime(),
-            });
-            data.args = _.map(data.args, (item) => _.extend(item, defaults));
-            data.args = _.map(data.args, (item) => {
-                if (!item.name) {
-                    item.name = `Offline Record #${item.id}`;
-                }
-                return _.extend({display_name: item.name}, item);
-            });
-            console.log(data.args);
-            await this._mergeModelRecord(model, data.args, "[]");
-            const c_ids = _.map(data.args, "id");
-            return resolve(c_ids.length === 1?c_ids[0]:c_ids);
         });
     },
 
@@ -238,22 +250,25 @@ const Exporter = DatabaseComponent.extend({
      * @returns {Promise[Object]}
      */
     default_get: function (model, data) {
-        return new Promise(async (resolve) => {
-            let record = await this._db.getRecord("webclient", "defaults", model);
-
-            const context_defaults = data.kwargs.context;
-            const default_keys = _.filter(Object.keys(context_defaults), function (
-                item
-            ) {
-                return item.startsWith("default_");
-            });
-            const defaults = {};
-            for (const key of default_keys) {
-                const skey = key.substr(8);
-                defaults[skey] = context_defaults[key];
+        return new Promise(async (resolve, reject) => {
+            try {
+                let record = await this._db.getRecord("webclient", "defaults", model);
+                const context_defaults = data.kwargs.context;
+                const default_keys = _.filter(Object.keys(context_defaults), function (
+                    item
+                ) {
+                    return item.startsWith("default_");
+                });
+                const defaults = {};
+                for (const key of default_keys) {
+                    const skey = key.substr(8);
+                    defaults[skey] = context_defaults[key];
+                }
+                record = _.extend({}, record, defaults);
+                return resolve(_.pick(record, data.args[0]));
+            } catch (err) {
+                return reject(err);
             }
-            record = _.extend({}, record, defaults);
-            return resolve(_.pick(record, data.args[0]));
         });
     },
 
@@ -271,17 +286,22 @@ const Exporter = DatabaseComponent.extend({
      * @returns {Promise[Object]}
      */
     load_views: function (model, data) {
-        return new Promise(async (resolve) => {
-            const record = await this._db.getRecord("webclient", "views", model);
-            const views = _.chain(data.kwargs.views).flatten().filter().value();
-            const generic_view = _.pick(record.fields_views, "form");
-            return resolve({
-                "fields_views": _.extend(_.pick(record.fields_views, views), {
-                    calendar: generic_view,
-                    pivot: generic_view,
-                }),
-                "fields": record.fields,
-            });
+        return new Promise(async (resolve, reject) => {
+            try {
+                const record = await this._db.getRecord("webclient", "views", model);
+                const views = _.chain(data.kwargs.views).flatten().filter().value();
+                const generic_view = _.pick(record.fields_views, "form");
+                console.log("PAPAPAPAAP 1");
+                return resolve({
+                    "fields_views": _.extend(_.pick(record.fields_views, views), {
+                        calendar: generic_view,
+                        pivot: generic_view,
+                    }),
+                    "fields": record.fields,
+                });
+            } catch (err) {
+                return reject(err);
+            }
         });
     },
 
@@ -289,9 +309,13 @@ const Exporter = DatabaseComponent.extend({
      * @returns {Promise[Object]}
      */
     load_menus: function () {
-        return new Promise(async (resolve) => {
-            const record = await this._db.getRecord("webclient", "userdata", "menus");
-            return resolve(record && record.value || {});
+        return new Promise(async (resolve, reject) => {
+            try {
+                const record = await this._db.getRecord("webclient", "userdata", "menus");
+                return resolve(record.value);
+            } catch (err) {
+                return reject(err);
+            }
         });
     },
 
@@ -348,14 +372,16 @@ const Exporter = DatabaseComponent.extend({
                 plimit = data.kwargs.limit;
                 poffset = data.kwargs.offset;
             }
-            let [records, records_count] = await this._getModelRecords(
-                pmodel,
-                JSON.stringify(pdomain),
-                plimit,
-                poffset
-            );
-            if (!records) {
-                return reject();
+            let records = false, records_count = 0;
+            try {
+                [records, records_count] = await this._getModelRecords(
+                    pmodel,
+                    JSON.stringify(pdomain),
+                    plimit,
+                    poffset
+                );
+            } catch (err) {
+                return reject(err);
             }
             records = _.map(records, (item) => _.pick(item, ["id"].concat(pfields)));
             if ("kwargs" in data) {

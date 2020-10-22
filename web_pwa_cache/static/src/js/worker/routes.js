@@ -9,7 +9,7 @@ PWA.include({
             "/web/webclient/version_info": "_routeOutVersionInfo",
             "/longpolling/poll": "_routeOutLongPolling",
             "/web/dataset/call_kw": "_routeOutDatasetCallKW",
-            "/web/dataset/call": "_routeOutDatasetCall",
+            "/web/dataset/call": "_routeOutDatasetCallKW",
             "/web/action/load": "_routeOutActionLoad",
             "/web/dataset/search_read": "_routeOutDatasetSearchRead",
             "/web/webclient/translations": "_routeOutTranslations",
@@ -50,39 +50,14 @@ PWA.include({
             const model = pathname_parts[4];
             const method_name = pathname_parts[5];
             if (Exporter.prototype.hasOwnProperty(method_name)) {
-                const resp_data = await this._exporter[method_name](
-                    model,
-                    request_data.params
-                );
-                this._updateSyncCount();
-                if (resp_data) {
+                try {
+                    const resp_data = await this._exporter[method_name](
+                        model,
+                        request_data.params
+                    );
                     return resolve(ResponseJSONRPC(resp_data));
-                }
-            }
-            return reject();
-        });
-    },
-
-    /**
-     * Handle model method calls requests
-     *
-     * @param {String} url
-     * @param {Object} data
-     * @returns {Promise[Response]}
-     */
-    _routeOutDatasetCall: function (url, request_data) {
-        return new Promise(async (resolve, reject) => {
-            const pathname_parts = url.pathname.split("/");
-            const model = pathname_parts[4];
-            const method_name = pathname_parts[5];
-            if (Exporter.prototype.hasOwnProperty(method_name)) {
-                const resp_data = await this._exporter[method_name](
-                    model,
-                    request_data.params
-                );
-                this._updateSyncCount();
-                if (resp_data) {
-                    return resolve(ResponseJSONRPC(resp_data));
+                } catch (err) {
+                    return reject(err);
                 }
             }
             return reject();
@@ -111,9 +86,13 @@ PWA.include({
      */
     _routeOutActionLoad: function (url, request_data) {
         return new Promise(async (resolve, reject) => {
-            const resp_data = await this._exporter.action_load(request_data.params);
-            if (resp_data) {
-                return resolve(ResponseJSONRPC(resp_data));
+            try {
+                const resp_data = await this._exporter.action_load(request_data.params);
+                if (resp_data) {
+                    return resolve(ResponseJSONRPC(resp_data));
+                }
+            } catch (err) {
+                return reject(err);
             }
             return reject();
         });
@@ -126,14 +105,15 @@ PWA.include({
      */
     _routeOutDatasetSearchRead: function (url, request_data) {
         return new Promise(async (resolve, reject) => {
-            const resp_data = await this._exporter.search_read(
-                false,
-                request_data.params
-            );
-            if (resp_data) {
+            try {
+                const resp_data = await this._exporter.search_read(
+                    false,
+                    request_data.params
+                );
                 return resolve(ResponseJSONRPC(resp_data));
+            } catch (err) {
+                return reject(err);
             }
-            return reject();
         });
     },
 
@@ -142,11 +122,12 @@ PWA.include({
      */
     _routeOutTranslations: function () {
         return new Promise(async (resolve, reject) => {
-            const resp_data = await this._exporter.translations();
-            if (resp_data) {
+            try {
+                const resp_data = await this._exporter.translations();
                 return resolve(ResponseJSONRPC(resp_data.value));
+            } catch (err) {
+                return reject();
             }
-            return reject();
         });
     },
 
@@ -160,14 +141,19 @@ PWA.include({
     _routeOutGenericPost: function (url, request_data) {
         return new Promise(async (resolve, reject) => {
             console.log("---------- GENERIC POST OUT");
-            const post_cache = await this._exporter.post_generic(
-                url.pathname,
-                request_data.params
-            );
-            if (post_cache) {
-                return resolve(ResponseJSONRPC(post_cache.result));
+            try {
+                const post_cache = await this._exporter.post_generic(
+                    url.pathname,
+                    request_data.params
+                );
+                if (post_cache) {
+                    return resolve(ResponseJSONRPC(post_cache.result));
+                } else {
+                    return reject();
+                }
+            } catch (err) {
+                return reject(err);
             }
-            return reject();
         });
     },
 

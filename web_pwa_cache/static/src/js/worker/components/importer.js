@@ -167,12 +167,16 @@ const Importer = DatabaseComponent.extend({
      * @returns {Promise[Array[Number]]}
      */
     _vacuumRecords: function (model, oids) {
-        return new Promise(async (resolve) => {
-            const [records] = await this._getModelRecords(model);
-            const cur_ids = _.map(records, "id");
-            const ids_to_remove = _.difference(oids, cur_ids);
-            this._removeRecords(model, ids_to_remove);
-            return resolve(ids_to_remove);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const [records] = await this._getModelRecords(model);
+                const cur_ids = _.map(records, "id");
+                const ids_to_remove = _.difference(oids, cur_ids);
+                this._removeRecords(model, ids_to_remove);
+                return resolve(ids_to_remove);
+            } catch (err) {
+                return reject(err);
+            }
         });
     },
 });

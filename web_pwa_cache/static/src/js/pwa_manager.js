@@ -5,8 +5,6 @@
     "use strict";
 
     var core = require('web.core');
-    var mixins = require('web.mixins');
-    var ServicesMixin = require('web.ServicesMixin');
     var PWAManager = require("web_pwa_oca.PWAManager");
     var PWAModeSelector = require("web_pwa_cache.PWAModeSelector");
     var BroadcastSWMixin = require("web_pwa_cache.BroadcastSWMixin");
@@ -14,8 +12,6 @@
 
     var QWeb = core.qweb;
 
-    PWAManager.include(mixins.PropertiesMixin);
-    PWAManager.include(ServicesMixin);
     PWAManager.include(BroadcastSWMixin);
     PWAManager.include({
         custom_events: {

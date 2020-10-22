@@ -120,31 +120,39 @@ const DatabaseComponent = OdooClass.extend({
         return new Promise(async (resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["records"], "readonly");
             if (objectStore) {
-                return resolve(await new Promise((resolve, reject) => {
-                    const query = objectStore.get([model, "[]"]);
-                    query.onsuccess = function(evt) {
-                        const srecords = evt.target.result?.records || [];
-                        let records = self.queryRecords(srecords, domain);
-                        const records_count = records.length;
-                        const orders = orderby.split();
-                        for (const order of orders) {
-                            const order_parts = order.split(" ");
-                            if (order_parts.length === 1) {
-                                order_parts.push("asc");
+                try {
+                    const records = await new Promise((resolve, reject) => {
+                        const query = objectStore.get([model, "[]"]);
+                        query.onsuccess = function(evt) {
+                            if (!evt.target.result) {
+                                reject();
                             }
+                            const srecords = evt.target.result?.records || [];
+                            let records = self.queryRecords(srecords, domain);
+                            const records_count = records.length;
+                            const orders = orderby.split();
+                            for (const order of orders) {
+                                const order_parts = order.split(" ");
+                                if (order_parts.length === 1) {
+                                    order_parts.push("asc");
+                                }
 
-                            records = _.sortBy(records, order_parts[0].trim());
-                            if (order_parts[1].trim().toLowerCase() === "asc") {
-                                records = records.reverse();
+                                records = _.sortBy(records, order_parts[0].trim());
+                                if (order_parts[1].trim().toLowerCase() === "asc") {
+                                    records = records.reverse();
+                                }
                             }
-                        }
-                        records = records.slice(offset, limit===-1?undefined:offset+limit);
-                        resolve([records, records_count]);
-                    };
-                    query.onerror = function(evt) {
-                        reject();
-                    };
-                }));
+                            records = records.slice(offset, limit===-1?undefined:offset+limit);
+                            resolve([records, records_count]);
+                        };
+                        query.onerror = function(evt) {
+                            reject();
+                        };
+                    });
+                    resolve(records);
+                } catch (err) {
+                    reject(err);
+                }
             }
             return reject();
         });
@@ -158,11 +166,12 @@ const DatabaseComponent = OdooClass.extend({
      */
     _getModelRecord: function(model, rec_id, domain="[]") {
         return new Promise(async (resolve, reject) => {
-            const [records] = await this._getModelRecords(model, domain);
-            if (records) {
+            try {
+                const [records] = await this._getModelRecords(model, domain);
                 return resolve(_.findWhere(records, {id: rec_id}));
+            } catch (err) {
+                return reject();
             }
-            return reject();
         });
     },
 

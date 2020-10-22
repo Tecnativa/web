@@ -69,21 +69,19 @@ const DatabaseManager = OdooClass.extend({
      * @returns {Promise[Object]}
      */
     getRecord: function(db_name, store, range) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             const [objectStore] = this.getObjectStores(db_name, [store], "readonly");
             if (objectStore) {
-                return resolve(await new Promise((resolve, reject) => {
-                    const query = objectStore.get(range);
-                    query.onsuccess = function(evt) {
-                        resolve(evt.target.result);
-                    };
-                    query.onerror = function(evt) {
-                        reject();
-                    };
-                }));
+                const query = objectStore.get(range);
+                query.onsuccess = function(evt) {
+                    resolve(evt.target.result);
+                };
+                query.onerror = function() {
+                    reject();
+                };
+            } else {
+                return reject();
             }
-
-            return reject();
         });
     },
 
@@ -96,13 +94,14 @@ const DatabaseManager = OdooClass.extend({
         const [objectStore] = this.getObjectStores(db_name, [store], "readwrite");
         if (objectStore) {
             objectStore.put(value);
+            return Promise.resolve();
         }
-        return Promise.resolve();
+        return Promise.reject();
     },
 
 
     updateRecord: function(db_name, store, index, range, value) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const [objectStore] = this.getObjectStores(db_name, [store], "readwrite");
             if (objectStore) {
                 const query = objectStore.index(index).getAll(range);
@@ -115,6 +114,11 @@ const DatabaseManager = OdooClass.extend({
                     }
                     resolve();
                 };
+                query.onerror = function () {
+                    reject();
+                }
+            } else {
+                reject();
             }
         });
     },

@@ -69,9 +69,13 @@ PWA.include({
                 });
                 let domain_forced = [];
                 // Get current records
-                const cur_model_record = await this._importer._getModelRecords(model_def.model);
-                if (cur_model_record?.prefetch_last_update) {
-                    domain_forced = [["write_date", ">=", cur_model_record.prefetch_last_update]];
+                try {
+                    const cur_model_record = await this._importer._getModelRecords(model_def.model);
+                    if (cur_model_record.prefetch_last_update) {
+                        domain_forced = [["write_date", ">=", cur_model_record.prefetch_last_update]];
+                    }
+                } catch (err) {
+                    // do nothing.
                 }
                 // Update new records
                 const [response, request_data] = await this._rpc.datasetJSonRpc(
