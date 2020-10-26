@@ -1,87 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates id="template" xml:space="preserve">
 
-<t t-extend="UserMenu.Actions">
-    <t t-jquery=".dropdown-divider" t-operation="after">
-        <a role="menuitem" href="#" data-menu="pwaMode" class="dropdown-item">
-            <label class="o_switch mb0">
-                <input id="oe_pwa_mode" type="checkbox"/><span/>
-                <span style="margin-right: 8px;">Offline Mode</span>
-            </label>
-        </a>
-        <a role="menuitem" href="#" data-menu="pwaQueueSync" class="dropdown-item">
-            <span class="text-info"><span id='records_count'>0</span> Recods queued to sync.</span>
-        </a>
-        <div role="separator" class="dropdown-divider"/>
+    <t t-extend="UserMenu.Actions">
+        <t t-jquery=".dropdown-divider" t-operation="after">
+            <a role="menuitem" href="#" data-menu="pwaMode" class="dropdown-item">
+                <label class="o_switch mb0">
+                    <input id="oe_pwa_mode" type="checkbox" />
+                    <span />
+                    <span style="margin-right: 8px;">Offline Mode</span>
+                </label>
+            </a>
+            <a role="menuitem" href="#" data-menu="pwaQueueSync" class="dropdown-item">
+                <span class="text-info">
+                    <span id='records_count'>0</span>
+                    Recods queued to sync.
+                </span>
+            </a>
+            <div role="separator" class="dropdown-divider" />
+        </t>
     </t>
-</t>
 
-<t t-name="web_pwa_cache.PrefetchProgress">
-    <div class="modal fade" id="pwaPrefetchProgress" tabindex="-1" role="dialog" aria-labelledby="PWA Prefetch Progress" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Getting server data...</h5>
+    <t t-name="web_pwa_cache.PrefetchProgress">
+        <div class="modal fade" id="pwaPrefetchProgress" tabindex="-1" role="dialog" aria-labelledby="PWA Prefetch Progress" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Getting server data...</h5>
+                    </div>
+                    <div class="modal-body" />
                 </div>
-                <div class="modal-body" />
             </div>
         </div>
-    </div>
-</t>
+    </t>
 
-<t t-name="web_pwa_cache.PrefetchProgressTasks">
-    <t t-foreach="tasks" t-as="task">
-        <p class="prefetch-message" t-esc="task.message"/>
-        <div class="progress" style="height: 20px;">
-            <div class="progress-bar bg-info" role="progressbar" t-attf-style="width: {{task.progress}}%;" t-att-aria-valuenow="task.progress" aria-valuemin="0" aria-valuemax="100"/>
+    <t t-name="web_pwa_cache.PrefetchProgressTasks">
+        <t t-foreach="tasks" t-as="task">
+            <p class="prefetch-message" t-esc="task.message" />
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-info" role="progressbar" t-attf-style="width: {{task.progress}}%;" t-att-aria-valuenow="task.progress" aria-valuemin="0" aria-valuemax="100" />
+            </div>
+        </t>
+    </t>
+
+    <t t-name="web_pwa_cache.PWAModeSelector">
+        <div class="text-center">
+            <button class="btn btn-secondary p-4 mr-3" data-mode="offline">
+                <i class="fa fa-4x fa-unlink" />
+                <br />
+                OFFLINE
+            </button>
+            <button class="btn btn-secondary p-4 ml-3" data-mode="online">
+                <i class="fa fa-4x fa-link" />
+                <br />
+                ONLINE
+            </button>
         </div>
     </t>
-</t>
 
-<t t-name="web_pwa_cache.PWAModeSelector">
-    <div class="text-center">
-        <button class="btn btn-secondary p-4 mr-3" data-mode="offline"><i class="fa fa-4x fa-unlink"/><br/>OFFLINE</button>
-        <button class="btn btn-secondary p-4 ml-3" data-mode="online"><i class="fa fa-4x fa-link"/><br/>ONLINE</button>
-    </div>
-</t>
-
-<t t-name="web_pwa_cache.PWASyncModal">
-    <div class="text-center">
-        <t t-if="records.length">
-            <table class="table">
-                <thead class="thead-dark">
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Method</th>
-                    <th scope="col">Model</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Failed</th>
-                </tr>
-                </thead>
-                <tbody>
-                    <t t-foreach="records" t-as="record">
-                        <tr>
-                            <th scope="row"><t t-esc="record_index"/></th>
-                            <td><t t-esc="record.raw.method"/></td>
-                            <td><t t-esc="record.raw.model"/></td>
-                            <td><t t-esc="record.date"/></td>
-                            <td>
-                                <t t-if="record.failed">
-                                    Yes
-                                </t>
-                                <t t-else="">
-                                    No
-                                </t>
-                            </td>
-                        </tr>
-                    </t>
-                </tbody>
-            </table>
-        </t>
-        <t t-else="">
-            <strong class="muted">NO RECORDS QUEUED TO SYNCHRONIZE :)</strong>
-        </t>
-    </div>
-</t>
+    <t t-name="web_pwa_cache.PWASyncModal">
+        <div class="text-center">
+            <t t-if="records.length">
+                <div>
+                    <table class="table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="sticky-top" scope="col">#</th>
+                                <th class="sticky-top" scope="col">Method</th>
+                                <th class="sticky-top" scope="col">Model</th>
+                                <th class="sticky-top" scope="col">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="records" t-as="record">
+                                <tr>
+                                    <th scope="row">
+                                        <t t-esc="record_index" />
+                                    </th>
+                                    <td>
+                                        <t t-esc="record.raw.method" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="record.raw.model" />
+                                    </td>
+                                    <td>
+                                        <t t-esc="moment(record.date).format(langDateTimeFormat)" />
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+            <t t-else="">
+                <strong class="muted">NO RECORDS QUEUED TO SYNCHRONIZE :)</strong>
+            </t>
+        </div>
+    </t>
 
 </templates>

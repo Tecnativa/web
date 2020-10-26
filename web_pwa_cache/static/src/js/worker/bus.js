@@ -34,37 +34,51 @@ PWA.include({
             return;
         }
         switch (evt.data.type) {
-            case "SET_PWA_MODE": {
-                this._config.set("pwa_mode", evt.data.mode).then(() => {
-                    this.postClientPageMessage({
-                        type: "PWA_CONFIG_CHANGED",
-                        data: {
-                            pwa_mode: evt.data.mode,
-                        },
+            case "SET_PWA_MODE":
+                {
+                    this._config.set("pwa_mode", evt.data.mode).then(() => {
+                        this.postClientPageMessage({
+                            type: "PWA_CONFIG_CHANGED",
+                            data: {
+                                pwa_mode: evt.data.mode,
+                            },
+                        });
                     });
-                });
-                if (evt.data.mode === "online") {
+                    if (evt.data.mode === "online") {
+                        this._prefetchDataPost();
+                    }
+                }
+                break;
+            case "PWA_PREFETCH_NEED_ACTION_NO":
+                {
+                    this._send;
+                }
+                break;
+            case "GET_PWA_CONFIG":
+                {
+                    this._sendConfigToClient();
+                }
+                break;
+            case "GET_PWA_SYNC_RECORDS":
+                {
+                    this._sendSyncRecordsToClient();
+                }
+                break;
+            case "START_SYNCHRONIZATION":
+                {
+                    this._startSync().then(() => this._prefetchDataPost());
+                }
+                break;
+            case "START_PREFETCH":
+                {
                     this._prefetchDataPost();
                 }
-            } break;
-            case "PWA_PREFETCH_NEED_ACTION_NO": {
-                this._send
-            } break;
-            case "GET_PWA_CONFIG": {
-                this._sendConfigToClient();
-            } break;
-            case "GET_PWA_SYNC_RECORDS": {
-                this._sendSyncRecordsToClient();
-            } break;
-            case "START_SYNCHRONIZATION": {
-                this._startSync().then(() => this._prefetchDataPost());
-            } break;
-            case "START_PREFETCH": {
-                this._prefetchDataPost();
-            } break;
-            case "SET_PWA_STANDALONE_MODE": {
-                this._config.set("standalone", evt.data.status)
-            }
-        };
+                break;
+            case "SET_PWA_STANDALONE_MODE":
+                {
+                    this._config.set("standalone", evt.data.status);
+                }
+                break;
+        }
     },
 });

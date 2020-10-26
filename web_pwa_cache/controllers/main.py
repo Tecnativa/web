@@ -41,13 +41,23 @@ class PWA(PWA):
     def _get_pwa_params(self):
         res = super()._get_pwa_params()
         # Add 'GET' resources
+        pwa_cache_obj = request.env["pwa.cache"]
+        records = pwa_cache_obj.search(self._get_pwa_cache_domain("get"))
         res[1] += [
             "/web_pwa_cache/static/src/xml/base.xml",
-        ] + request.env["pwa.cache"].get_client_qweb_urls()
+        ] + pwa_cache_obj._get_text_field_lines(records, "get_urls")
         return res
 
+    def _get_pwa_cache_domain(self, cache_type):
+        return [
+            ("cache_type", "=", cache_type),
+            "|",
+            ("group_ids", "in", request.env.user.groups_id.ids),
+            ("group_ids", "=", False),
+        ]
+
     def _pwa_prefetch_action(self, last_update, **kwargs):
-        records = request.env["pwa.cache"].search([("cache_type", "=", "model")])
+        records = request.env["pwa.cache"].search(self._get_pwa_cache_domain("model"))
         domain = [
             ("res_model", "in", records.mapped("model_id.model")),
         ]
@@ -57,9 +67,7 @@ class PWA(PWA):
         ir_model_obj = request.env["ir.model"]
         views = []
         for action in actions:
-            model_id = ir_model_obj.search(
-                [("model", "=", action.res_model)], limit=1
-            )
+            model_id = ir_model_obj.search([("model", "=", action.res_model)], limit=1)
             views.append(
                 {
                     "model": action.res_model,
@@ -70,21 +78,34 @@ class PWA(PWA):
         return {"actions": actions.ids, "views": views}
 
     def _pwa_prefetch_model(self, **kwargs):
-        records = request.env["pwa.cache"].search([("cache_type", "=", "model")])
-        return records.mapped(
-            lambda x: {
-                "model": x.model_id.model,
-                "model_name": x.model_id.name,
-                "domain": safe_eval(x.model_domain),
-                "orderby": x.model_orderby,
-            }
-        )
+        records = request.env["pwa.cache"].search(self._get_pwa_cache_domain("model"))
+        res = []
+        for record in records:
+            record_fields = {x for x in request.env[record.model_id.model]._fields}
+            excluded_field_names = record.model_field_excluded_ids.mapped("name")
+            fields = False
+            # Only send fields if doesn't need get all
+            if any(excluded_field_names):
+                fields = list(record_fields - set(excluded_field_names))
+            res.append(
+                {
+                    "model": record.model_id.model,
+                    "model_name": record.model_id.name,
+                    "domain": safe_eval(record.model_domain),
+                    "orderby": record.model_orderby,
+                    "fields": fields,
+                }
+            )
+        return res
 
     def _pwa_prefetch_clientqweb(self, **kwargs):
-        return request.env["pwa.cache"].get_client_qweb_refs()
+        records = request.env["pwa.cache"].search(
+            self._get_pwa_cache_domain("clientqweb")
+        )
+        return request.env["pwa.cache"]._get_text_field_lines(records, "xml_refs")
 
     def _pwa_prefetch_post(self, **kwargs):
-        records = request.env["pwa.cache"].search([("cache_type", "=", "post")])
+        records = request.env["pwa.cache"].search(self._get_pwa_cache_domain("post"))
         post_defs = []
         for record in records:
             e_context = record._get_eval_context()
@@ -98,13 +119,16 @@ class PWA(PWA):
 
     def _pwa_prefetch_userdata(self, **kwargs):
         from odoo.addons.web.controllers.main import module_boot
+
         return {
-            'list_modules': module_boot(),
-            'lang': request.env.lang,
+            "list_modules": module_boot(),
+            "lang": request.env.lang,
         }
 
     def _pwa_prefetch_onchange(self, **kwargs):
-        records = request.env["pwa.cache"].search([("cache_type", "=", "onchange")])
+        records = request.env["pwa.cache"].search(
+            self._get_pwa_cache_domain("onchange")
+        )
         onchanges = []
         for record in records:
             e_context = record._get_eval_context()
@@ -115,19 +139,51 @@ class PWA(PWA):
             for params in params_list:
                 to_write = defaults.copy()
                 to_write.update(params)
-                changes = record_obj.onchange(to_write, record.onchange_field.name, onchange_spec)
-                onchanges.append({
-                    'model': record.model_id.model,
-                    'field': record.onchange_field.name,
-                    'params': params,
-                    'changes': changes
-                })
+                changes = record_obj.onchange(
+                    to_write, record.onchange_field.name, onchange_spec
+                )
+                onchanges.append(
+                    {
+                        "model": record.model_id.model,
+                        "field": record.onchange_field.name,
+                        "params": params,
+                        "changes": changes,
+                    }
+                )
         return onchanges
+
+    def _pwa_prefetch_function(self, **kwargs):
+        records = request.env["pwa.cache"].search(
+            self._get_pwa_cache_domain("function")
+        )
+        functions = []
+        for record in records:
+            e_context = record._get_eval_context()
+            record_obj = request.env[record.model_id.model]
+            params_list = record.run_cache_code(eval_context=e_context)
+            for params in params_list:
+                params = params or []
+                func_ref = getattr(record_obj, record.function_name)
+                if func_ref:
+                    result = func_ref(*params)
+                    functions.append(
+                        {
+                            "model": record.model_id.model,
+                            "method": record.function_name,
+                            "params": params,
+                            "result": result,
+                        }
+                    )
+        return functions
 
     @route("/pwa/prefetch/<string:cache_type>", type="json", auth="public")
     def pwa_prefetch(self, cache_type, **kwargs):
-        available_types = {opt[0] for opt in request.env['pwa.cache']._fields['cache_type'].selection}
-        available_types.add('action')
+        # User dynamic defined caches
+        available_types = {
+            opt[0] for opt in request.env["pwa.cache"]._fields["cache_type"].selection
+        }
+        # Fixed caches
+        available_types |= {"action", "userdata"}
         if cache_type in available_types:
             prefetch_method = getattr(self, "_pwa_prefetch_{}".format(cache_type))
             if prefetch_method:

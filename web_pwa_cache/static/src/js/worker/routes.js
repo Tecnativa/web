@@ -60,7 +60,17 @@ PWA.include({
                     return reject(err);
                 }
             }
-            return reject();
+            // Try generic way
+            try {
+                const resp_data = await this._exporter._generic_function(
+                    model,
+                    method_name,
+                    request_data.params
+                );
+                return resolve(ResponseJSONRPC(resp_data.result));
+            } catch (err) {
+                return reject(err);
+            }
         });
     },
 
@@ -140,9 +150,8 @@ PWA.include({
      */
     _routeOutGenericPost: function (url, request_data) {
         return new Promise(async (resolve, reject) => {
-            console.log("---------- GENERIC POST OUT");
             try {
-                const post_cache = await this._exporter.post_generic(
+                const post_cache = await this._exporter._generic_post(
                     url.pathname,
                     request_data.params
                 );
@@ -173,7 +182,18 @@ PWA.include({
         const model = pathname_parts[4];
         const method_name = pathname_parts[5];
         if (Importer.prototype.hasOwnProperty(method_name)) {
-            this._importer[method_name](model, response_data.result, request_data.params);
+            this._importer[method_name](
+                model,
+                response_data.result,
+                request_data.params
+            );
+        } else {
+            this._importer._generic_function(
+                model,
+                method_name,
+                response_data.result,
+                request_data.params
+            );
         }
         return Promise.resolve();
     },
@@ -216,8 +236,7 @@ PWA.include({
      * Cache Generic Post Requests
      */
     _routeInGenericPost: function (url, response_data, request_data) {
-        console.log("---------- GENERIC POST IN");
-        this._importer.post_generic(
+        this._importer._generic_post(
             url.pathname,
             request_data.params,
             response_data.result

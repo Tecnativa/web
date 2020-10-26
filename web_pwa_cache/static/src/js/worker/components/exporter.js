@@ -15,7 +15,11 @@ const Exporter = DatabaseComponent.extend({
     name_search: function (model, data) {
         return new Promise(async (resolve, reject) => {
             try {
-                const [records] = await this._getModelRecords(model, "[]", data.kwargs.limit);
+                const [records] = await this._getModelRecords(
+                    model,
+                    "[]",
+                    data.kwargs.limit
+                );
                 const filtered_records = _.map(records, (item) =>
                     _.values(_.pick(item, ["id", "display_name"]))
                 );
@@ -71,10 +75,14 @@ const Exporter = DatabaseComponent.extend({
             const params = {};
             params[field_changed] = modif_state[field_changed];
             try {
-                const record = await this._db.getRecord("webclient", "onchange", [model, field_changed, JSON.stringify(params)]);
+                const record = await this._db.getRecord("webclient", "onchange", [
+                    model,
+                    field_changed,
+                    JSON.stringify(params),
+                ]);
                 return resolve(record.changes);
             } catch (err) {
-                return resolve({value:{}});
+                return resolve({value: {}});
             }
         });
     },
@@ -95,34 +103,15 @@ const Exporter = DatabaseComponent.extend({
                 filtered_records = _.map(filtered_records, (item) =>
                     _.pick(item, ["id"].concat(data.args[1]))
                 );
-
-                for (const record of filtered_records) {
-                    // Resolve x2x fields
-                    const view_def = await this._db.getRecord("webclient", "views", model);
-                    const data_fields = Object.keys(record);
-                    for (const field of data_fields) {
-                        if (view_def.fields[field].type === "one2many") {
-                            const svalues = [];
-                            for (const command of record[field]) {
-                                // TODO: Improve this to resolve all commands!!!
-                                if (command[0] === 4) {
-                                    svalues.push(command[1]);
-                                }
-                            }
-                            record[field] = svalues;
-                        } else if (view_def.fields[field].type === "many2one") {
-                            const ref_record = await this._getModelRecord(view_def.fields[field].relation, this._getValueOrID(record[field]));
-                            if (ref_record) {
-                                record[field] = [record[field], ref_record.display_name || ref_record.name];
-                            }
-                        }
-                    }
-                }
                 return resolve(filtered_records);
             } catch (err) {
                 return reject(err);
             }
         });
+    },
+
+    read_template: function (model, data) {
+        return this.db.getRecord("webclient", "template", data.args[0]);
     },
 
     /**
@@ -133,48 +122,8 @@ const Exporter = DatabaseComponent.extend({
     write: function (model, data) {
         return new Promise(async (resolve, reject) => {
             try {
-                for (const rec_id of data.args[0]) {
-                    const merge_data = {
-                        id: rec_id,
-                    };
-                    // Try to update 'display_name'
-                    if ("name" in data.args[1]) {
-                        const cur_record = await this._getModelRecord(model, rec_id);
-                        if (cur_record) {
-                            merge_data.display_name = cur_record.display_name.replace(
-                                cur_record.name,
-                                data.args[1].name
-                            );
-                        }
-                    }
-                    // Generate record with new values
-                    const record = _.extend(merge_data, data.args[1]);
-                    // Resolve x2x fields
-                    const view_def = await this._db.getRecord("webclient", "views", model);
-                    if (view_def) {
-                        const data_fields = Object.keys(record);
-                        for (const field of data_fields) {
-                            if (view_def.fields[field].type === "one2many") {
-                                const svalues = [];
-                                for (const command of merge_data[field]) {
-                                    // TODO: Improve this to resolve all commands!!!
-                                    if (command[0] === 4) {
-                                        svalues.push(command[1]);
-                                    }
-                                }
-                                record[field] = svalues;
-                            } else if (view_def.fields[field].type === "many2one") {
-                                const ref_record = await this._getModelRecord(view_def.fields[field].relation, merge_data[field]);
-                                record[field] = [merge_data[field], ref_record.display_name || ref_record.name];
-                            }
-                        }
-                    }
-                    await this._mergeModelRecord(model, [record], "[]");
-                }
-                this._db.saveRecord("webclient", "sync", {
-                    raw: data,
-                    date: (new Date()).getTime(),
-                });
+                const view_def = await this._db.getRecord("webclient", "views", model);
+                await this._process_record_write(model, data, view_def.fields);
                 return resolve(true);
             } catch (err) {
                 return reject(err);
@@ -190,9 +139,12 @@ const Exporter = DatabaseComponent.extend({
     create: function (model, data) {
         return new Promise(async (resolve, reject) => {
             try {
-                // TODO: Use other id's!!
-                // Create Offline Record
-                data.args = _.map(data.args, (item) => _.extend({id: 9000000000 + Number(_.uniqueId())}, item));
+                // Create Offline Record ids
+                data.args = _.map(data.args, (item) =>
+                    _.extend({id: this._genRecordID()}, item)
+                );
+
+                // Get context defaults
                 const context_defaults = data.kwargs.context;
                 const default_keys = _.filter(Object.keys(context_defaults), function (
                     item
@@ -222,26 +174,28 @@ const Exporter = DatabaseComponent.extend({
                         defaults[skey] = context_defaults[key];
                     }
                 }
-                // Store Sync Record
-                this._db.saveRecord("webclient", "sync", {
-                    raw: data,
-                    date: (new Date()).getTime(),
-                });
-                data.args = _.map(data.args, (item) => _.extend(item, defaults));
-                data.args = _.map(data.args, (item) => {
-                    if (!item.name) {
-                        item.name = `Offline Record #${item.id}`;
-                    }
-                    return _.extend({display_name: item.name}, item);
-                });
-                console.log(data.args);
-                await this._mergeModelRecord(model, data.args, "[]");
-                const c_ids = _.map(data.args, "id");
-                return resolve(c_ids.length === 1?c_ids[0]:c_ids);
+                const record_defaults = await this._db.getRecord(
+                    "webclient",
+                    "defaults",
+                    model
+                );
+
+                const view_def = await this._db.getRecord("webclient", "views", model);
+                const c_ids = await this._process_record_create(
+                    model,
+                    data,
+                    _.extend({}, record_defaults.defaults, defaults),
+                    view_def.fields
+                );
+                return resolve(c_ids.length === 1 ? c_ids[0] : c_ids);
             } catch (err) {
                 return reject(err);
             }
         });
+    },
+
+    unlink: function (model, data) {
+        return this._removeRecords(model, data.args[0]);
     },
 
     /**
@@ -264,8 +218,8 @@ const Exporter = DatabaseComponent.extend({
                     const skey = key.substr(8);
                     defaults[skey] = context_defaults[key];
                 }
-                record = _.extend({}, record, defaults);
-                return resolve(_.pick(record, data.args[0]));
+                const result = _.extend({}, record.defaults, defaults);
+                return resolve(_.pick(result, data.args[0]));
             } catch (err) {
                 return reject(err);
             }
@@ -291,13 +245,12 @@ const Exporter = DatabaseComponent.extend({
                 const record = await this._db.getRecord("webclient", "views", model);
                 const views = _.chain(data.kwargs.views).flatten().filter().value();
                 const generic_view = _.pick(record.fields_views, "form");
-                console.log("PAPAPAPAAP 1");
                 return resolve({
-                    "fields_views": _.extend(_.pick(record.fields_views, views), {
+                    fields_views: _.extend(_.pick(record.fields_views, views), {
                         calendar: generic_view,
                         pivot: generic_view,
                     }),
-                    "fields": record.fields,
+                    fields: record.fields,
                 });
             } catch (err) {
                 return reject(err);
@@ -311,7 +264,11 @@ const Exporter = DatabaseComponent.extend({
     load_menus: function () {
         return new Promise(async (resolve, reject) => {
             try {
-                const record = await this._db.getRecord("webclient", "userdata", "menus");
+                const record = await this._db.getRecord(
+                    "webclient",
+                    "userdata",
+                    "menus"
+                );
                 return resolve(record.value);
             } catch (err) {
                 return reject(err);
@@ -372,7 +329,8 @@ const Exporter = DatabaseComponent.extend({
                 plimit = data.kwargs.limit;
                 poffset = data.kwargs.offset;
             }
-            let records = false, records_count = 0;
+            let records = false,
+                records_count = 0;
             try {
                 [records, records_count] = await this._getModelRecords(
                     pmodel,
@@ -387,27 +345,6 @@ const Exporter = DatabaseComponent.extend({
             if ("kwargs" in data) {
                 return resolve(records);
             }
-            // Resolve x2x fields
-            for (const record of records) {
-                const view_def = await this._db.getRecord("webclient", "views", pmodel);
-                const data_fields = Object.keys(record);
-                for (const field of data_fields) {
-                    if (view_def.fields[field].type === "one2many") {
-                        const svalues = [];
-                        for (const command of record[field]) {
-                            // TODO: Improve this to resolve all commands!!!
-                            if (command[0] === 4) {
-                                svalues.push(command[1]);
-                            }
-                        }
-                        record[field] = svalues;
-                    } else if (view_def.fields[field].type === "many2one" && typeof record[field] === "number") {
-                        const ref_record = await this._getModelRecord(view_def.fields[field].relation, record[field]);
-                        record[field] = [record[field], ref_record.display_name || ref_record.name];
-                    }
-                }
-            }
-
             return resolve({
                 length: records_count,
                 records: records,
@@ -420,10 +357,310 @@ const Exporter = DatabaseComponent.extend({
      * @param {String} pathname
      * @param {Object} params
      */
-    post_generic: function (pathname, params) {
+    _generic_post: function (pathname, params) {
         return this._db.getRecord("webclient", "post", [
             pathname,
             JSON.stringify(params),
         ]);
+    },
+
+    /**
+     * Generic handle for function calls caching response
+     * @param {String} model
+     * @param {String} method
+     * @param {Object} params
+     */
+    _generic_function: function (model, method, params) {
+        return this._db.getRecord("webclient", "function", [
+            model,
+            method,
+            JSON.stringify(params),
+        ]);
+    },
+
+    /**
+     * Resolve Many2one
+     * @param {*} record
+     * @param {*} fields
+     */
+    _process_record_create: function (model, data, defaults, view_fields) {
+        return new Promise(async (resolve) => {
+            const records_sync = [];
+            for (let index in data.args) {
+                const record = _.extend({}, defaults, data.args[index]);
+                // Write a temporal name
+                if (record.name) {
+                    record.name += ` (Offline Record #${record.id})`;
+                } else {
+                    record.name = `Offline Record #${record.id}`;
+                }
+                record.display_name = record.name;
+                const record_fields = Object.keys(record);
+                const processed_fields = [];
+                const records_linked = {};
+                for (const field of record_fields) {
+                    if (view_fields[field].type === "one2many") {
+                        const relation = view_fields[field].relation;
+                        const view_def = await this._db.getRecord(
+                            "webclient",
+                            "views",
+                            relation
+                        );
+                        const model_defaults = await this._db.getRecord(
+                            "webclient",
+                            "defaults",
+                            relation
+                        );
+                        if (!records_linked[relation]) {
+                            records_linked[relation] = [];
+                        }
+                        const ids_to_add = [];
+                        const subrecords = [];
+                        for (const command of record[field]) {
+                            // create only have 0 command
+                            if (command[0] === 0) {
+                                let subrecord = command[2];
+                                const subrecord_fields = Object.keys(subrecord);
+                                const parent_field = _.findKey(view_def.fields, {
+                                    required: true,
+                                    relation: model,
+                                });
+                                subrecord = _.extend(
+                                    {},
+                                    model_defaults.defaults,
+                                    subrecord
+                                );
+                                subrecord[parent_field] = record.id;
+                                subrecord.id = this._genRecordID();
+                                const link = {};
+                                link[model] = [
+                                    {
+                                        field: field,
+                                        id: record.id,
+                                    },
+                                ];
+                                records_sync.push({
+                                    raw: {
+                                        model: relation,
+                                        method: "create",
+                                        args: [subrecord],
+                                    },
+                                    date: new Date().getTime(),
+                                    linked: link,
+                                });
+                                subrecord = await this._process_record_to_merge(
+                                    subrecord,
+                                    view_def.fields
+                                );
+                                // The order is not created yet, so.. ensure write
+                                // their correct values
+                                subrecord[parent_field] = [record.id, record.name];
+                                subrecords.push(subrecord);
+                                ids_to_add.push(subrecord.id);
+                                records_linked[relation].push({
+                                    field: parent_field,
+                                    id: subrecord.id,
+                                });
+                            } else if (command[0] === 4) {
+                                ids_to_add.push(command[1]);
+                            } else if (command[0] === 5) {
+                                ids_to_add = command[2];
+                            }
+                        }
+                        record[field] = _.uniq(ids_to_add);
+                        if (subrecords.length) {
+                            await this._mergeModelRecord(relation, subrecords, "[]");
+                            processed_fields.push(field);
+                        }
+                    }
+                }
+
+                // Add main record
+                data.args[index] = await this._process_record_to_merge(
+                    record,
+                    view_fields
+                );
+                records_sync.splice(0, 0, {
+                    raw: {
+                        model: model,
+                        method: "create",
+                        args: [_.omit(record, processed_fields)],
+                    },
+                    date: new Date().getTime(),
+                    linked: records_linked,
+                });
+                await this._db.saveRecords("webclient", "sync", records_sync);
+            }
+
+            await this._mergeModelRecord(model, data.args, "[]");
+            return resolve(_.map(data.args, "id"));
+        });
+    },
+
+    /**
+     * Resolve Many2one
+     * @param {*} record
+     * @param {*} fields
+     */
+    _process_record_write: function (model, data, view_fields) {
+        return new Promise(async (resolve) => {
+            const records_sync = [];
+            const modified_records = data.args[0];
+            const modifications = data.args[1];
+            for (let record_id of modified_records) {
+                const record = await this._getModelRecord(model, record_id);
+                const modified_fields = Object.keys(modifications);
+                const processed_fields = [];
+                for (const field of modified_fields) {
+                    if (view_fields[field].type === "one2many") {
+                        if (!record[field]) {
+                            record[field] = [];
+                        }
+                        const relation = view_fields[field].relation;
+                        const view_def = await this._db.getRecord(
+                            "webclient",
+                            "views",
+                            relation
+                        );
+                        const model_defaults = await this._db.getRecord(
+                            "webclient",
+                            "defaults",
+                            relation
+                        );
+                        const subrecords = [];
+                        for (const command of modifications[field]) {
+                            // create only have 0 command
+                            if (command[0] === 0) {
+                                let subrecord = command[2];
+                                const subrecord_fields = Object.keys(subrecord);
+                                const parent_field = _.findKey(view_def.fields, {
+                                    required: true,
+                                    relation: model,
+                                });
+                                subrecord = _.extend(
+                                    {},
+                                    model_defaults.defaults,
+                                    subrecord
+                                );
+                                subrecord[parent_field] = record.id;
+                                subrecord.id = this._genRecordID();
+                                const link = {};
+                                link[model] = [
+                                    {
+                                        field: field,
+                                        id: record.id,
+                                    },
+                                ];
+                                records_sync.push({
+                                    raw: {
+                                        model: relation,
+                                        method: "create",
+                                        args: [subrecord],
+                                    },
+                                    date: new Date().getTime(),
+                                    linked: link,
+                                });
+                                subrecord = await this._process_record_to_merge(
+                                    subrecord,
+                                    view_def.fields
+                                );
+                                subrecords.push(subrecord);
+                                record[field].push(subrecord.id);
+                            } else if (command[0] === 1) {
+                                records_sync.push({
+                                    raw: {
+                                        model: relation,
+                                        method: "write",
+                                        args: [[command[1]], command[2]],
+                                    },
+                                    date: new Date().getTime(),
+                                });
+                                const ref_record = await this._getModelRecord(
+                                    relation,
+                                    command[1]
+                                );
+                                const subrecord = await this._process_record_to_merge(
+                                    command[2],
+                                    view_def.fields
+                                );
+                                subrecords.push(_.extend(ref_record, subrecord));
+                            } else if (command[0] === 2 || command[0] === 3) {
+                                if (command[0] === 2) {
+                                    records_sync.push({
+                                        raw: {
+                                            model: relation,
+                                            method: "unlink",
+                                            args: [[[command[1]]]],
+                                        },
+                                        date: new Date().getTime(),
+                                    });
+                                    this._removeRecords(relation, [command[1]]);
+                                }
+                                record[field] = _.reject(
+                                    record[field],
+                                    (item) => item === command[1]
+                                );
+                            } else if (command[0] === 4) {
+                                record[field].push(command[1]);
+                            } else if (command[0] === 5) {
+                                record[field] = [];
+                            } else if (command[0] === 6) {
+                                record[field] = command[2];
+                            }
+                        }
+                        if (subrecords.length) {
+                            await this._mergeModelRecord(relation, subrecords, "[]");
+                            processed_fields.push(field);
+                        }
+                        // Ensure unique values
+                        record[field] = _.uniq(record[field]);
+                    }
+                }
+
+                // Update main record
+                records_sync.push({
+                    raw: {
+                        model: model,
+                        method: "write",
+                        args: [[record.id], _.pick(record, processed_fields)],
+                    },
+                    date: new Date().getTime(),
+                });
+                await this._db.saveRecords("webclient", "sync", records_sync);
+                await this._mergeModelRecord(model, [record]);
+            }
+            return resolve(true);
+        });
+    },
+
+    _process_record_to_merge: function (record, fields) {
+        return new Promise(async (resolve, reject) => {
+            const processed_record = _.clone(record);
+            if (Object.keys(fields).length) {
+                const data_fields = Object.keys(record);
+                for (const field of data_fields) {
+                    if (fields[field].type === "many2one") {
+                        try {
+                            const ref_record = await this._getModelRecord(
+                                fields[field].relation,
+                                record[field]
+                            );
+                            processed_record[field] = [
+                                record[field],
+                                ref_record.display_name || ref_record.name,
+                            ];
+                        } catch (err) {
+                            console.log(
+                                `[ServiceWorker] Can't process '${field}' field. Can't found the relational value.`
+                            );
+                        }
+                    } else {
+                        processed_record[field] = record[field];
+                    }
+                }
+                return resolve(processed_record);
+            }
+            return reject();
+        });
     },
 });

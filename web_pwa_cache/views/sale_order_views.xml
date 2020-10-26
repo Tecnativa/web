@@ -8,10 +8,17 @@
             <formMobile string="Sales Order" class="o_sale_order">
                 <field name="state" invisible="1" />
                 <group class="p-0 m-0">
-                    <field name="partner_id" widget="res_partner_many2one" domain="[('customer','=',True)]" context="{'search_default_customer':1, 'show_vat': True}" options='{"always_reload": True}'/>
+                    <field name="partner_id" widget="res_partner_many2one" domain="[('customer','=',True)]" context="{'search_default_customer':1, 'show_vat': True}" options='{"always_reload": True}' />
                 </group>
                 <group class="p-0 m-0">
-                    <field
+                    <field name="order_line" attrs="{'readonly': [('state', 'in', ('done','cancel'))]}" nolabel="1">
+                        <tree string="Sales Order Lines" editable="bottom">
+                            <field name="product_id" />
+                            <field name="product_uom_qty" />
+                            <field name="product_uom" />
+                        </tree>
+                    </field>
+                    <!-- <field
                         name="order_line"
                         attrs="{'readonly': [('state', 'in', ('done','cancel'))]}"
                         nolabel="1"
@@ -25,7 +32,7 @@
                             <group name="Desks" domain="[('name', 'ilike', '%desk%')]" order="id ASC" />
                             <group name="Chairs" domain="[('name', 'ilike', '%chair%')]" />
                         </kanban>
-                    </field>
+                    </field> -->
                 </group>
             </formMobile>
         </field>

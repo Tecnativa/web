@@ -28,6 +28,20 @@ const Importer = DatabaseComponent.extend({
         return this.name_search(model, data);
     },
 
+    onchange: function (model, data, request_params) {
+        const field = params.args[2];
+        // FIXME: Can't process multiple fields
+        if (typeof field !== "string") {
+            return Promise.resolve();
+        }
+        return this._db.saveRecord("webclient", "onchange", {
+            model: model,
+            field: field,
+            params: JSON.stringify(request_params.args[1][field]),
+            changes: data,
+        });
+    },
+
     /**
      * @param {String} model
      * @param {Object} data
@@ -49,11 +63,12 @@ const Importer = DatabaseComponent.extend({
      */
     default_get: function (model, data) {
         return this._db.getRecord("webclient", "defaults", model).then((record) => {
-            this._db.saveRecord(
-                "webclient",
-                "defaults",
-                _.extend({model: model}, record, data)
-            );
+            const nrecord = _.defaults(record || {}, {
+                model: model,
+                defaults: {},
+            });
+            _.extend(nrecord.defaults, data);
+            this._db.saveRecord("webclient", "defaults", nrecord);
         });
     },
 
@@ -78,6 +93,13 @@ const Importer = DatabaseComponent.extend({
         return this._mergeModelRecord(model, data);
     },
 
+    read_template: function (model, data, request_params) {
+        return this.db.saveRecord("webclient", "template", {
+            xml_ref: request_params.args[0],
+            template: data,
+        });
+    },
+
     /**
      * @param {String} model
      * @param {Object} data
@@ -85,7 +107,10 @@ const Importer = DatabaseComponent.extend({
      * @returns {Promise}
      */
     get_filters: function (model, data, request_params) {
-        return this._db.saveRecord("webclient", "filters", {model: request_params.args[0], filters: data});
+        return this._db.saveRecord("webclient", "filters", {
+            model: request_params.args[0],
+            filters: data,
+        });
     },
 
     /**
@@ -128,17 +153,30 @@ const Importer = DatabaseComponent.extend({
      * @param {String} pathname
      * @param {Object} params
      */
-    post_generic: function (pathname, params, result) {
-        console.log("---- SAVE GENERIC POST");
-        console.log(pathname);
-        console.log(params);
-        console.log(result);
+    _generic_post: function (pathname, params, result) {
         return this._db.saveRecord("webclient", "post", {
             pathname: pathname,
             params: JSON.stringify(params),
             result: result,
         });
     },
+
+    /**
+     * Generic handle for function calls caching response
+     *
+     * @param {String} pathname
+     * @param {Object} params
+     */
+    _generic_function: function (model, method, result, request_params) {
+        return this._db.saveRecord("webclient", "function", {
+            model: model,
+            method: method,
+            params: JSON.stringify(request_params.args),
+            return: result,
+        });
+    },
+
+    /** PREFETCH HELPERS **/
 
     /**
      * @param {Array[Object]} onchanges
@@ -158,7 +196,26 @@ const Importer = DatabaseComponent.extend({
         });
     },
 
+    /**
+     * @param {Array[Object]} functions
+     * @returns {Promise}
+     */
+    saveFunctions: function (functions) {
+        return new Promise(async (resolve) => {
+            for (const func of functions) {
+                await this._db.saveRecord("webclient", "function", {
+                    model: func.model,
+                    method: func.method,
+                    params: JSON.stringify(func.params),
+                    return: func.result,
+                });
+            }
+            return resolve();
+        });
+    },
+
     /** INTERNAL **/
+
     /**
      * Remove old records
      *

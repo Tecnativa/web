@@ -3,7 +3,7 @@
 "use strict";
 
 const DatabaseManager = OdooClass.extend({
-    init: function() {
+    init: function () {
         this._databases = {};
     },
 
@@ -12,14 +12,14 @@ const DatabaseManager = OdooClass.extend({
      * @param {Function} onupgradedb
      * @returns {Promise[IDBDatabase]}
      */
-    initDatabase: function(db_name, onupgradedb) {
+    initDatabase: function (db_name, onupgradedb) {
         return new Promise(async (resolve, reject) => {
             if (this._databases[db_name]) {
                 return resolve(this._databases[db_name]);
             }
             const db = await new Promise((resolve, reject) => {
                 const dbreq = self.indexedDB.open(db_name, 1);
-                dbreq.onsuccess = evt => {
+                dbreq.onsuccess = (evt) => {
                     resolve(evt.target.result);
                 };
                 dbreq.onerror = () => {
@@ -39,7 +39,7 @@ const DatabaseManager = OdooClass.extend({
      * @param {String} db_name
      * @returns {IDBDatabase}
      */
-    get: function(db_name) {
+    get: function (db_name) {
         return this._databases[db_name];
     },
 
@@ -49,7 +49,7 @@ const DatabaseManager = OdooClass.extend({
      * @param {String} mode
      * @returns {IDBObjectStore}
      */
-    getObjectStores: function(db_name, stores, mode) {
+    getObjectStores: function (db_name, stores, mode) {
         const db = this.get(db_name);
         if (!db) {
             throw new Error("Database not found");
@@ -68,15 +68,15 @@ const DatabaseManager = OdooClass.extend({
      * @param {IDBKeyRange/String} range
      * @returns {Promise[Object]}
      */
-    getRecord: function(db_name, store, range) {
+    getRecord: function (db_name, store, range) {
         return new Promise((resolve, reject) => {
             const [objectStore] = this.getObjectStores(db_name, [store], "readonly");
             if (objectStore) {
                 const query = objectStore.get(range);
-                query.onsuccess = function(evt) {
+                query.onsuccess = function (evt) {
                     resolve(evt.target.result);
                 };
-                query.onerror = function() {
+                query.onerror = function () {
                     reject();
                 };
             } else {
@@ -90,22 +90,32 @@ const DatabaseManager = OdooClass.extend({
      * @param {String} store
      * @param {Any} value
      */
-    saveRecord: function(db_name, store, value) {
+    saveRecord: function (db_name, store, value) {
+        return this.saveRecords(db_name, store, [value]);
+    },
+
+    /**
+     * @param {String} db_name
+     * @param {String} store
+     * @param {Array[Any]} values
+     */
+    saveRecords: function (db_name, store, values) {
         const [objectStore] = this.getObjectStores(db_name, [store], "readwrite");
         if (objectStore) {
-            objectStore.put(value);
+            for (const value of values) {
+                objectStore.put(value);
+            }
             return Promise.resolve();
         }
         return Promise.reject();
     },
 
-
-    updateRecord: function(db_name, store, index, range, value) {
+    updateRecord: function (db_name, store, index, range, value) {
         return new Promise((resolve, reject) => {
             const [objectStore] = this.getObjectStores(db_name, [store], "readwrite");
             if (objectStore) {
                 const query = objectStore.index(index).getAll(range);
-                query.onsuccess = function(evt) {
+                query.onsuccess = function (evt) {
                     for (const record of evt.target.result) {
                         const nrecord = _.extend(record, value);
                         console.log("--- UPDATING");
@@ -116,11 +126,10 @@ const DatabaseManager = OdooClass.extend({
                 };
                 query.onerror = function () {
                     reject();
-                }
+                };
             } else {
                 reject();
             }
         });
     },
-
 });

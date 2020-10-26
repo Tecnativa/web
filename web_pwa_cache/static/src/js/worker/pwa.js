@@ -34,40 +34,45 @@ PWA.include({
      *  - online:
      *      If is a CUD operation goes through network, if fails tries from cache.
      *      Other requests goes through cache directly, if fails tries network.
-     *  - offline: Tries cache
+     *  - offline: Tries from cache
      * @override
      */
     processRequest: function (request) {
-        console.log("------ TRYE CHACE PROCESS REQUEST");
         // Only process 'application/json'
         if (
             request.method === "POST" &&
             request.headers.get("Content-Type") === "application/json"
         ) {
-            console.log("------ LAUNCH TRY CACHE post");
-            return new Promise(async (resolve, reject) => {
-                console.log("------ LAUNCH TRY CACHE post start");
-                let need_try_network = true;
-                if (this._config.isStandaloneMode()) {
+            if (this._config.isStandaloneMode()) {
+                return new Promise(async (resolve, reject) => {
+                    let need_try_network = true;
+                    const request_cloned_cache = request.clone();
                     // Try CUD operations
                     // Methodology: Network first
                     if (!this._config.isOfflineMode()) {
-                        const crud_oper = this._getCRUDOperation(request);
-                        if (['create', 'unlink', 'write'].indexOf(crud_oper) !== -1) {
+                        const request_oper = this._getRequestOperation(request);
+                        if (
+                            ["create", "unlink", "write"].indexOf(request_oper) !== -1
+                        ) {
                             need_try_network = false;
-                            const response_net = await this._tryFromNetwork(request);
-                            if (response_net) {
-                                return resolve(response_net);
+                            try {
+                                const response_net = await this._tryFromNetwork(
+                                    request
+                                );
+                                if (response_net) {
+                                    return resolve(response_net);
+                                }
+                            } catch (err) {
+                                // do nothing.
                             }
                         }
                     }
 
                     // Other request (or network fails) go directly from cache
                     try {
-                        console.log("------ LAUNCH TRY CACHE");
-                        const response_cache = await this._tryFromCache(request);
-                        console.log("------- END TRY CACHE");
-                        console.log(response_cache);
+                        const response_cache = await this._tryFromCache(
+                            request_cloned_cache
+                        );
                         return resolve(response_cache);
                     } catch (err) {
                         console.log(
@@ -85,37 +90,40 @@ PWA.include({
                     }
 
                     if (need_try_network && !this._config.isOfflineMode()) {
-                        const response_net = await this._tryFromNetwork(request);
-                        return resolve(response_net);
+                        try {
+                            const response_net = await this._tryFromNetwork(request);
+                            if (response_net) {
+                                return resolve(response_net);
+                            }
+                        } catch (err) {
+                            // do nothing
+                        }
                     } else if (this._config.isOfflineMode()) {
                         // Avoid default browser behaviour
                         return resolve(false);
                     }
-                }
-                // else {
-                //     // No standalone mode, so go throught network and cache the response
-                //     const request_cloned_net = request.clone();
-                //     const request_data = await request_cloned_net.json();
-                //     const response_net = await fetch(request);
-                //     this._processResponse(response_net, request_data);
-                //     return resolve(response_net);
-                // }
 
-                return reject();
-            });
+                    return reject();
+                });
+            } else {
+                return fetch(request);
+            }
         }
         return this._super.apply(this, arguments);
     },
 
     /**
-     * Try obtain the CRUD operation of the request
+     * Try obtain the operation of the request.
      *
      * @param {FetchRequest} request_cloned
      * @returns {String}
      */
-    _getCRUDOperation: function (request_cloned) {
+    _getRequestOperation: function (request_cloned) {
         const url = new URL(request_cloned.url);
-        if (url.pathname.startsWith('/web/dataset/call_kw') || url.pathname.startsWith('/web/dataset/call')) {
+        if (
+            url.pathname.startsWith("/web/dataset/call_kw") ||
+            url.pathname.startsWith("/web/dataset/call")
+        ) {
             const pathname_parts = url.pathname.split("/");
             const method_name = pathname_parts[5];
             return method_name;
@@ -152,8 +160,8 @@ PWA.include({
             objectStore.createIndex("model", "model", {unique: false});
             db.createObjectStore("sync", {autoIncrement: true});
             db.createObjectStore("config", {keyPath: "param", unique: true});
-            db.createObjectStore("functions", {
-                keyPath: ["model", "function", "params"],
+            db.createObjectStore("function", {
+                keyPath: ["model", "method", "params"],
                 unique: true,
             });
             db.createObjectStore("post", {
@@ -169,6 +177,10 @@ PWA.include({
                 keyPath: ["model", "field", "params"],
                 unique: true,
             });
+            db.createObjectStore("template", {
+                keyPath: ["xml_ref"],
+                unique: true,
+            });
         }
     },
 
@@ -178,11 +190,21 @@ PWA.include({
     _tryFromNetwork: function (request) {
         return new Promise(async (resolve, reject) => {
             const request_cloned_net = request.clone();
-            const response_net = await fetch(request);
-            if (response_net) {
-                const request_data = await request_cloned_net.json();
-                //this._processResponse(response_net, request_data);
-                return resolve(response_net);
+            try {
+                const response_net = await fetch(request);
+                if (response_net) {
+                    const request_oper = this._getRequestOperation(request);
+                    // Avoid cache 'read' operations to don't show partial
+                    // data. This happens when obtains records in a paginated
+                    // context. So, best don't chache this type of responses.
+                    if (["search_read", "read"].indexOf(request_oper) === -1) {
+                        const request_data = await request_cloned_net.json();
+                        this._processResponse(response_net, request_data);
+                    }
+                    return resolve(response_net);
+                }
+            } catch (err) {
+                return reject(err);
             }
             return reject();
         });
@@ -191,24 +213,23 @@ PWA.include({
     /**
      * @returns {Promise[Response]}
      */
-    _tryFromCache: function (request) {
+    _tryFromCache: function (request_cloned_cache) {
         return new Promise(async (resolve, reject) => {
-            const request_cloned_cache = request.clone();
             const request_data = await request_cloned_cache.json();
             const url = new URL(request_cloned_cache.url);
             for (let [key, fnct] of Object.entries(this._routes.out)) {
                 if (url.pathname.startsWith(key)) {
                     try {
-                        console.log("-------------- TRY FROM CACHE!");
-                        console.log(url.pathname);
-                        return resolve(await this[fnct].call(this, url, request_data));
+                        const result = await this[fnct].call(this, url, request_data);
+                        this._updateClientSyncCount();
+                        return resolve(result);
                     } catch (err) {
                         return reject(err);
                     }
                 }
             }
             // Generic Post Caching
-            console.log("[ServiceWorker] Caching generic POST request")
+            console.log("[ServiceWorker] Caching generic POST request");
             try {
                 return resolve(await this._routeOutGenericPost(url, request_data));
             } catch (err) {
@@ -253,7 +274,7 @@ PWA.include({
             type: "PWA_INIT_CONFIG",
             data: this._config.state,
         });
-        this._updateSyncCount();
+        this._updateClientSyncCount();
         return Promise.resolve();
     },
 
@@ -280,33 +301,45 @@ PWA.include({
      */
     _startSync: function () {
         return new Promise(async (resolve, reject) => {
-            const records = await this._sync.getSyncRecords();
+            const records = await this._sync.getSyncRecordsWithKey();
             for (const index in records) {
-                const record = records[index];
+                const key = records[index].key;
+                const record = records[index].value;
                 let s_args = record.raw.args;
                 // Remove generated client ids to be generated by server side
                 if (record.raw.method === "create") {
                     s_args = _.map(record.raw.args, (item) => _.omit(item, "id"));
                 }
-                let response=false, request_data=false;
+                let response = false,
+                    request_data = false;
                 try {
-                    [response, request_data] = await this._rpc.callJSonRpc(record.raw.model, record.raw.method, s_args, record.raw.kwargs);
+                    [response, request_data] = await this._rpc.callJSonRpc(
+                        record.raw.model,
+                        record.raw.method,
+                        s_args,
+                        record.raw.kwargs
+                    );
                 } catch (err) {
-                    console.log("[ServiceWorker] Error: can't synchronize the current record. Aborting!");
-                    await this._sync.updateSyncRecord(index, {failed: true});
-                    return reject(index);
+                    console.log(
+                        "[ServiceWorker] Error: can't synchronize the current record. Aborting!"
+                    );
+                    await this._sync.updateSyncRecord(key, {failed: true});
+                    return reject(key);
                 }
                 const response_clone = response.clone();
                 const data = await response_clone.json();
-                const new_ids = typeof data.result === "number"?[data.result]:data.result;
+                const new_ids =
+                    typeof data.result === "number" ? [data.result] : data.result;
                 for (const index_b in new_ids) {
                     const new_id = new_ids[index_b];
                     const old_id = record.raw.args[index_b].id;
-                    await this._sync._updateModelRecord(record.raw.model, old_id, {id: new_id});
+                    await this._sync._updateModelRecord(record.raw.model, old_id, {
+                        id: new_id,
+                    });
                 }
-                await this._sync.removeSyncRecord(index);
+                await this._sync.removeSyncRecords([key]);
             }
-            this._updateSyncCount();
+            this._updateClientSyncCount();
             return resolve();
         });
     },
@@ -317,12 +350,12 @@ PWA.include({
      *
      * @returns {Promise}
      */
-    _updateSyncCount: function () {
+    _updateClientSyncCount: function () {
         this._sync.getSyncRecords().then((records) => {
             this.postClientPageMessage({
                 type: "PWA_SYNC_RECORDS_COUNT",
                 count: records.length,
-            })
+            });
         });
     },
 });

@@ -27,24 +27,52 @@ const Sync = DatabaseComponent.extend({
     },
 
     /**
-     * @param {Number} index
-     * @param {Object} data
      * @returns {Promise}
      */
-    updateSyncRecord: function (index, data) {
+    getSyncRecordsWithKey: function() {
         return new Promise((resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["sync"], "readwrite");
             if (objectStore) {
-                let cur_iter = 0;
+                const records = [];
                 const cursor = objectStore.openCursor();
                 cursor.onsuccess = function(evt) {
                     var cursor = evt.target.result;
                     if (cursor) {
-                        if (cur_iter === Number(index)) {
-                            cursor.update(data);
+                        records.push({
+                            key: cursor.key,
+                            value: cursor.value
+                        });
+                        cursor.continue();
+                    } else {
+                        resolve(records);
+                    }
+                };
+                cursor.onerror = function() {
+                    reject();
+                };
+            } else {
+                reject();
+            }
+        });
+    },
+
+    /**
+     * @param {Number} key
+     * @param {Object} data
+     * @returns {Promise}
+     */
+    updateSyncRecord: function (key, data) {
+        return new Promise((resolve, reject) => {
+            const [objectStore] = this._db.getObjectStores("webclient", ["sync"], "readwrite");
+            if (objectStore) {
+                const cursor = objectStore.openCursor();
+                cursor.onsuccess = function(evt) {
+                    var cursor = evt.target.result;
+                    if (cursor) {
+                        if (cursor.key === key) {
+                            cursor.update(_.extend(cursor.value,data));
                             resolve();
                         } else {
-                            ++cur_iter;
                             cursor.continue();
                         }
                     }
@@ -59,25 +87,21 @@ const Sync = DatabaseComponent.extend({
     },
 
     /**
-     * @param {Number} index
+     * @param {Array[Number]} keys
      * @returns {Promise}
      */
-    removeSyncRecord: function (index) {
+    removeSyncRecords: function (keys) {
         return new Promise((resolve, reject) => {
             const [objectStore] = this._db.getObjectStores("webclient", ["sync"], "readwrite");
             if (objectStore) {
-                let cur_iter = 0;
                 const cursor = objectStore.openCursor();
                 cursor.onsuccess = function(evt) {
                     var cursor = evt.target.result;
                     if (cursor) {
-                        if (cur_iter === Number(index)) {
+                        if (keys.indexOf(cursor.key) !== -1) {
                             cursor.delete();
-                            resolve();
-                        } else {
-                            ++cur_iter;
-                            cursor.continue();
                         }
+                        cursor.continue();
                     } else {
                         resolve();
                     }

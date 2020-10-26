@@ -27,11 +27,11 @@ class PWACache(models.Model):
     cache_type = fields.Selection(
         [
             ("model", "Model"),
-            ("qweb", "Server QWeb"),
             ("clientqweb", "Client QWeb"),
             ("function", "Function"),
             ("onchange", "Onchange"),
             ("post", "Post"),
+            ("get", "Get"),
         ],
         string="Type",
         required=True,
@@ -39,17 +39,39 @@ class PWACache(models.Model):
 
     model_id = fields.Many2one("ir.model", string="Model")
     model_name = fields.Char(
-        related="model_id.model", string="Model Name", readonly=True, store=True
+        related="model_id.model",
+        string="Model Name",
+        readonly=True,
     )
     model_domain = fields.Char("Domain", default="[]")
     model_orderby = fields.Char(string="OrderBy", default="id")
+    model_field_excluded_ids = fields.Many2many(
+        comodel_name="ir.model.fields",
+        string="Excluded fields",
+        relation="pwa_cache_ir_model_fields_rel",
+        column1="pwa_cache_id",
+        column2="field_id",
+        domain="[['model_id', '=', model_id]]",
+    )
 
-    xml_urls = fields.Text(string="XML URL's")
+    function_name = fields.Char("Function Name")
+
     xml_refs = fields.Text(string="XML Ref's")
 
     code = fields.Text(string="Python code", default=DEFAULT_PYTHON_CODE)
 
     post_url = fields.Char(string="Post URL")
+
+    get_urls = fields.Text(string="Get URL's")
+
+    group_ids = fields.Many2many(
+        comodel_name="res.groups",
+        string="Allowed groups",
+        relation="pwa_cache_res_group_rel",
+        column1="pwa_cache_id",
+        column2="group_id",
+        help="Allowed groups to get this cache. Empty for all.",
+    )
 
     onchange_field = fields.Many2one(
         "ir.model.fields",
@@ -69,7 +91,7 @@ class PWACache(models.Model):
         if self.code:
             safe_eval(self.code.strip(), eval_context, mode="exec", nocopy=True)
             if "params" in eval_context:
-                return eval_context["params"]
+                return eval_context["params"] or []
         return [False]
 
     @api.multi
@@ -93,13 +115,3 @@ class PWACache(models.Model):
         return list(
             {url for xml_urls in records.mapped(field_name) for url in xml_urls.split()}
         )
-
-    @api.model
-    def get_client_qweb_urls(self):
-        records = self.search([("cache_type", "=", "clientqweb")])
-        return self._get_text_field_lines(records, "xml_urls")
-
-    @api.model
-    def get_client_qweb_refs(self):
-        records = self.search([("cache_type", "=", "qweb")])
-        return self._get_text_field_lines(records, "xml_refs")
