@@ -24,6 +24,7 @@ PWA.include({
                         this._prefetchPostData(),
                         this._prefetchUserData(),
                         this._prefetchOnchangeData(),
+                        this._prefetchOnchangeData("formula"),
                         this._prefetchFunctionData(),
                     ]).then(() => {
                         this.postClientPageMessage({type: "PREFETCH_MODAL_HIDE"});
@@ -358,20 +359,25 @@ PWA.include({
     /**
      * Prefetch onchange values
      *
+     * @param {String} type
      * @returns {Promise}
      */
-    _prefetchOnchangeData: function () {
+    _prefetchOnchangeData: function (type) {
         return new Promise(async (resolve) => {
             const prefetch_last_update = await this._config.get(
                 "prefetch_onchange_last_update"
             );
             this.postClientPageMessage({
                 type: "PREFETCH_MODAL_TASK_INFO",
-                id: "onchange_data",
+                id: `onchange_${type}_data`,
                 message: "Getting onchange data...",
             });
             // Get prefetching metadata
-            let [response, _] = await this._rpc.sendJSonRpc("/pwa/prefetch/onchange");
+            const endpoint = '/pwa/prefetch/onchange';
+            if (type) {
+                endpoint += `_${type}`;
+            }
+            let [response, _] = await this._rpc.sendJSonRpc(endpoint);
             // Prefetch Onchange
             const response_data = (await response.json()).result;
             if (response_data) {
@@ -380,7 +386,7 @@ PWA.include({
 
             this.postClientPageMessage({
                 type: "PREFETCH_MODAL_TASK_INFO",
-                id: "onchange_data",
+                id: `onchange_${type}_data`,
                 message: "Completed!",
                 progress: 1,
             });

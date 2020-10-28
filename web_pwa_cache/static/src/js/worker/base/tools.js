@@ -37,3 +37,51 @@ function MakePost(url, data) {
 function DateToOdooFormat(date) {
     return (new moment(date)).utc().format(ODOO_DATETIME_FORMAT);
 }
+
+// Original author: https://stackoverflow.com/a/25859853
+function evalInScope(js, contextAsScope) {
+    //# Return the results of the in-line anonymous function we .call with the passed context
+    return function() {
+        with (this) {
+            return eval(js);
+        };
+    }.call(contextAsScope);
+}
+
+// This code is part of NX-Compiler: https://blog.risingstack.com/writing-a-javascript-framework-sandboxed-code-evaluation/#analternativeway
+class JSSandbox {
+    constructor() {
+        this.sandboxProxies = new WeakMap();
+        this.handler = {
+            has: function (target, key) {
+                return true;
+            },
+
+            get: function (target, key) {
+                if (key === Symbol.unscopables) {
+                    return undefined;
+                }
+                return target[key];
+            },
+        }
+        this.compiledExec = false;
+    }
+
+    compile (src) {
+        const self = this;
+        const s_src = 'with (sandbox) {' + src + '}'
+        const code = new Function('sandbox', s_src);
+
+        this.compiledExec = function (sandbox) {
+            if (!self.sandboxProxies.has(sandbox)) {
+                const sandboxProxy = new Proxy(sandbox, self.handler);
+                self.sandboxProxies.set(sandbox, sandboxProxy);
+            }
+            return code(self.sandboxProxies.get(sandbox))
+        }
+    }
+
+    run (context) {
+        return this.compiledExec(context || {});
+    }
+};

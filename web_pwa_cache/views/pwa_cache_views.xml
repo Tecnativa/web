@@ -14,19 +14,22 @@
                 <group>
                     <field name="group_ids" widget="many2many_tags" />
                 </group>
-                <group attrs="{'invisible': [('cache_type', 'not in', ['model','onchange','function'])]}">
-                    <field name="model_id" attrs="{'required': [('cache_type', '=', 'model')]}" />
+                <group attrs="{'invisible': [('cache_type', 'not in', ['model', 'onchange', 'onchange_formula', 'function'])]}">
+                    <field name="model_id" attrs="{'required': [('cache_type', 'in', ['model', 'onchange', 'onchange_formula', 'function'])]}" />
                 </group>
                 <group attrs="{'invisible': [('cache_type', '!=', 'model')]}">
                     <field name="model_domain" widget="domain" options="{'model': 'model_name', 'in_dialog': True}" attrs="{'required': [('cache_type', '=', 'model')]}" />
                     <field name="model_orderby" attrs="{'required': [('cache_type', '=', 'model')]}" />
-                    <field name="model_field_excluded_ids" attr="" widget="many2many_tags" />
+                    <field name="model_field_excluded_ids" widget="many2many_tags" />
                 </group>
                 <group attrs="{'invisible': [('cache_type', '!=', 'function')]}">
                     <field name="function_name" attrs="{'required': [('cache_type', '=', 'function')]}" />
                 </group>
-                <group attrs="{'invisible': [('cache_type', '!=', 'onchange')]}">
-                    <field name="onchange_field" attrs="{'required': [('cache_type', '=', 'onchange')]}" />
+                <group attrs="{'invisible': [('cache_type', 'not in', ['onchange', 'onchange_formula'])]}">
+                    <field name="onchange_field" attrs="{'required': [('cache_type', 'in', ['onchange', 'onchange_formula'])]}" />
+                </group>
+                <group attrs="{'invisible': [('cache_type', '!=', 'onchange_formula')]}">
+                    <field name="onchange_formula" attrs="{'required': [('cache_type', '=', 'onchange_formula')]}" />
                 </group>
                 <group attrs="{'invisible': [('cache_type', '!=', 'qweb')]}">
                     <field name="xml_refs" attrs="{'required': [('cache_type', '=', 'qweb')]}" />
@@ -51,7 +54,7 @@
                 </group>
 
                 <notebook>
-                    <page string="Python Code" name='code' autofocus="autofocus" attrs="{'invisible': [('cache_type', 'not in', ['onchange','function','post'])]}">
+                    <page string="Python Code" name='code' autofocus="autofocus" attrs="{'invisible': [('cache_type', 'not in', ['onchange','onchange_formula','function','post'])]}">
                         <field name="code" widget="ace" options="{'mode': 'python'}" placeholder="Enter Python code here. Help about Python expression is available in the help tab of this document." />
                     </page>
 

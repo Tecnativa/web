@@ -5,4 +5,4 @@ from odoo import models, fields
 class View(models.Model):
     _inherit = 'ir.ui.view'
 
-    type = fields.Selection(selection_add=[('formMobile', "Form Mobile")])
+    type = fields.Selection(selection_add=[('formPWA', "Form PWA")])

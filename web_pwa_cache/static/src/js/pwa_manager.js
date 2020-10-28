@@ -36,6 +36,12 @@ odoo.define("web_pwa_cache.PWAManager", function (require) {
             this.$modalPrefetchProgressContent = this.$modalPrefetchProgress.find(
                 ".modal-body"
             );
+
+            // Try update service worker mode.
+            this.postServiceWorkerMessage({
+                type: "SET_PWA_STANDALONE_MODE",
+                status: this._isPWAStandalone(),
+            });
         },
 
         /**

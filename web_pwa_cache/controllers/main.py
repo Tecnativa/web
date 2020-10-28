@@ -4,7 +4,9 @@
 import json
 from odoo.http import request, route
 from odoo.tools import safe_eval
+from odoo import http
 from odoo.addons.web_pwa_oca.controllers.main import PWA
+from odoo.addons.web.controllers.main import Action
 
 
 class PWA(PWA):
@@ -148,6 +150,25 @@ class PWA(PWA):
                         "field": record.onchange_field.name,
                         "params": params,
                         "changes": changes,
+                    }
+                )
+        return onchanges
+
+    def _pwa_prefetch_onchange_formula(self, **kwargs):
+        records = request.env["pwa.cache"].search(
+            self._get_pwa_cache_domain("onchange_formula")
+        )
+        onchanges = []
+        for record in records:
+            e_context = record._get_eval_context()
+            params_list = record.run_cache_code(eval_context=e_context)
+            for params in params_list:
+                onchanges.append(
+                    {
+                        "model": record.model_id.model,
+                        "field": record.onchange_field.name,
+                        "params": params,
+                        "formula": record.onchange_formula,
                     }
                 )
         return onchanges

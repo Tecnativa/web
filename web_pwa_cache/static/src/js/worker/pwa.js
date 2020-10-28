@@ -300,7 +300,8 @@ PWA.include({
      * @returns {Promise}
      */
     _startSync: function () {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
+            const sync_keys_done = [];
             const records = await this._sync.getSyncRecordsWithKey();
             for (const index in records) {
                 const key = records[index].key;
@@ -313,6 +314,9 @@ PWA.include({
                 let response = false,
                     request_data = false;
                 try {
+                    console.log("---------- SYNC");
+                    console.log(record);
+                    console.log(s_args);
                     [response, request_data] = await this._rpc.callJSonRpc(
                         record.raw.model,
                         record.raw.method,
@@ -324,20 +328,80 @@ PWA.include({
                         "[ServiceWorker] Error: can't synchronize the current record. Aborting!"
                     );
                     await this._sync.updateSyncRecord(key, {failed: true});
-                    return reject(key);
+                    break;
                 }
-                const response_clone = response.clone();
-                const data = await response_clone.json();
-                const new_ids =
-                    typeof data.result === "number" ? [data.result] : data.result;
-                for (const index_b in new_ids) {
-                    const new_id = new_ids[index_b];
-                    const old_id = record.raw.args[index_b].id;
-                    await this._sync._updateModelRecord(record.raw.model, old_id, {
-                        id: new_id,
-                    });
+                // Propagate the new id to the rest of the records
+                if (record.raw.method === "create") {
+                    const response_clone = response.clone();
+                    const data = await response_clone.json();
+                    const new_ids =
+                        typeof data.result === "number" ? [data.result] : data.result;
+                    for (const index_b in new_ids) {
+                        const new_id = new_ids[index_b];
+                        const old_id = record.raw.args[index_b].id;
+                        await this._sync._updateModelRecord(record.raw.model, old_id, {
+                            id: new_id,
+                        });
+                        // Update linked records
+                        const linked_models = Object.keys(record.linked)
+                        for (const model of linked_models) {
+                            const changes = record.linked[model];
+                            for (const change of changes) {
+                                // Update normal records
+                                const model_record = await this._exporter._getModelRecord(
+                                    model,
+                                    change.id
+                                );
+                                let field = model_record[change.field];
+                                if (typeof field === 'object') {
+                                    field = _.map(field, (item) => {
+                                        if (item === change.change) { return new_id; }
+                                        return item;
+                                    });
+                                } else {
+                                    field = new_id;
+                                }
+                                model_record[change.field] = field;
+                                console.log(`---- UPDATE ${model} ${change.field} ${change.id} --> ${new_id}`);
+                                console.log(model_record);
+                                await this._sync._updateModelRecord(record.raw.model, change.id, model_record);
+
+                                // Update sync records
+                                for (const def_sync of records) {
+                                    const srecord = def_sync.value;
+                                    if (srecord.raw.model !== model) {
+                                        continue;
+                                    }
+                                    if (srecord.id)
+                                    for (const record_sync of srecord.raw.args) {
+                                        let field = record_sync[change.field];
+                                        if (typeof field === 'object') {
+                                            field = _.map(field, (item) => {
+                                                if (item === change.change) { return new_id; }
+                                                return item;
+                                            });
+                                        } else {
+                                            field = new_id;
+                                        }
+                                        record_sync[change.field] = field;
+                                        console.log(`---- UPDATE SYNC ${model} ${change.field} ${change.id} --> ${new_id}`);
+                                        console.log(field);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 await this._sync.removeSyncRecords([key]);
+                sync_keys_done.push(key);
+            }
+            // Update DB with the changes
+            // This is neccessary if the sync. process fails
+            for (const record of records) {
+                if (sync_keys_done.indexOf(record.id) !== -1) {
+                    continue;
+                }
+                await this._sync.updateSyncRecord(record.key, record.value);
             }
             this._updateClientSyncCount();
             return resolve();

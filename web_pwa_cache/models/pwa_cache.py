@@ -22,6 +22,9 @@ class PWACache(models.Model):
 #  - time, datetime, dateutil, timezone: useful Python libraries
 #  - b64encode, b64decode: To work with base64
 # To return an params, assign: params = [...]\n\n\n\n"""
+    DEFAULT_JS_CODE = """# Formula must be return an object where keys are the modified fields
+# Here you can use the active record fields directly.
+# To return an onchange: assign: onchange = {'value': {}, 'warnings': [{title: '', message: ''}]}\n\n\n\n"""
 
     name = fields.Char("Name", required=True)
     cache_type = fields.Selection(
@@ -30,6 +33,7 @@ class PWACache(models.Model):
             ("clientqweb", "Client QWeb"),
             ("function", "Function"),
             ("onchange", "Onchange"),
+            ("onchange_formula", "Onchange with formula"),
             ("post", "Post"),
             ("get", "Get"),
         ],
@@ -59,6 +63,7 @@ class PWACache(models.Model):
     xml_refs = fields.Text(string="XML Ref's")
 
     code = fields.Text(string="Python code", default=DEFAULT_PYTHON_CODE)
+    code_js = fields.Text(string="Javascript code", default=DEFAULT_JS_CODE)
 
     post_url = fields.Char(string="Post URL")
 
@@ -78,6 +83,7 @@ class PWACache(models.Model):
         string="Onchage field",
         domain="[['model_id', '=', model_id]]",
     )
+    onchange_formula = fields.Text(string="Formula")
 
     @api.constrains("code")
     def _check_python_code(self):

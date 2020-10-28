@@ -85,6 +85,29 @@ const DatabaseManager = OdooClass.extend({
         });
     },
 
+     /**
+     * @param {String} db_name
+     * @param {String} store
+     * @param {IDBKeyRange/String} range
+     * @returns {Promise[Object]}
+     */
+    getRecords: function (db_name, store, range) {
+        return new Promise((resolve, reject) => {
+            const [objectStore] = this.getObjectStores(db_name, [store], "readonly");
+            if (objectStore) {
+                const query = objectStore.getAll(range);
+                query.onsuccess = function (evt) {
+                    resolve(evt.target.result);
+                };
+                query.onerror = function () {
+                    reject();
+                };
+            } else {
+                return reject();
+            }
+        });
+    },
+
     /**
      * @param {String} db_name
      * @param {String} store

@@ -71,19 +71,44 @@ const Exporter = DatabaseComponent.extend({
     onchange: function (model, data) {
         return new Promise(async (resolve) => {
             const modif_state = data.args[1];
-            const field_changed = data.args[2];
-            const params = {};
-            params[field_changed] = modif_state[field_changed];
+            let fields_changed = data.args[2];
+            if (typeof fields_changed === "string") {
+                fields_changed = [fields_changed];
+            }
+            const params = _.pick(modif_state, fields_changed);
+            const res = {value: {}, warnings: []};
             try {
-                const record = await this._db.getRecord("webclient", "onchange", [
+                const records = await this._db.getRecords("webclient", "onchange", [
                     model,
                     field_changed,
                     JSON.stringify(params),
                 ]);
-                return resolve(record.changes);
+                const jscompiler = new JSSandbox();
+                for (const record of records) {
+                    const value = false;
+                    const warnings = false;
+                    if (typeof record.changes !== 'undefined') {
+                        value = record.changes.value;
+                        warnings = record.changes.warnings;
+                    } else if (typeof record.formula !== 'undefined') {
+                        jscompiler.compile(record.formula);
+                        const changes = jscompiler.run(modif_state);
+                        value = changes.value;
+                        warnings = changes.warnings;
+                        return resolve(changes);
+                    }
+                    if (value) {
+                        res.value = _.extend(res.value, value);
+                    }
+                    if (warnings) {
+                        res.warnings = _.union(res.warnings, warnings);
+                    }
+                }
             } catch (err) {
-                return resolve({value: {}});
+                // do nothing.
             }
+
+            return resolve(res);
         });
     },
 
@@ -430,13 +455,22 @@ const Exporter = DatabaseComponent.extend({
                                     model_defaults.defaults,
                                     subrecord
                                 );
+                                record.display_name = record.name;
                                 subrecord[parent_field] = record.id;
                                 subrecord.id = this._genRecordID();
+                                // Write a temporal name
+                                if (subrecord.name) {
+                                    subrecord.name += ` (Offline Record #${subrecord.id})`;
+                                } else {
+                                    subrecord.name = `Offline Record #${subrecord.id}`;
+                                }
+                                subrecord.display_name = subrecord.name;
                                 const link = {};
                                 link[model] = [
                                     {
                                         field: field,
                                         id: record.id,
+                                        change: subrecord.id,
                                     },
                                 ];
                                 records_sync.push({
@@ -460,6 +494,7 @@ const Exporter = DatabaseComponent.extend({
                                 records_linked[relation].push({
                                     field: parent_field,
                                     id: subrecord.id,
+                                    change: record.id,
                                 });
                             } else if (command[0] === 4) {
                                 ids_to_add.push(command[1]);
@@ -544,11 +579,19 @@ const Exporter = DatabaseComponent.extend({
                                 );
                                 subrecord[parent_field] = record.id;
                                 subrecord.id = this._genRecordID();
+                                // Write a temporal name
+                                if (subrecord.name) {
+                                    subrecord.name += ` (Offline Record #${subrecord.id})`;
+                                } else {
+                                    subrecord.name = `Offline Record #${subrecord.id}`;
+                                }
+                                subrecord.display_name = subrecord.name;
                                 const link = {};
                                 link[model] = [
                                     {
                                         field: field,
                                         id: record.id,
+                                        change: subrecord.id,
                                     },
                                 ];
                                 records_sync.push({
