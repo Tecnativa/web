@@ -235,6 +235,7 @@ PWA.include({
                                     [false, "list"],
                                     [false, "kanban"],
                                     [false, "form"],
+                                    [false, "formPWA"],
                                     [false, "pivot"],
                                     [false, "graph"],
                                     [false, "activity"],
@@ -373,7 +374,7 @@ PWA.include({
                 message: "Getting onchange data...",
             });
             // Get prefetching metadata
-            const endpoint = '/pwa/prefetch/onchange';
+            let endpoint = '/pwa/prefetch/onchange';
             if (type) {
                 endpoint += `_${type}`;
             }

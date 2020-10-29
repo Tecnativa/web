@@ -38,16 +38,6 @@ function DateToOdooFormat(date) {
     return (new moment(date)).utc().format(ODOO_DATETIME_FORMAT);
 }
 
-// Original author: https://stackoverflow.com/a/25859853
-function evalInScope(js, contextAsScope) {
-    //# Return the results of the in-line anonymous function we .call with the passed context
-    return function() {
-        with (this) {
-            return eval(js);
-        };
-    }.call(contextAsScope);
-}
-
 // This code is part of NX-Compiler: https://blog.risingstack.com/writing-a-javascript-framework-sandboxed-code-evaluation/#analternativeway
 class JSSandbox {
     constructor() {

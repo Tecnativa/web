@@ -32,7 +32,6 @@ odoo.define("web_pwa_cache.DataManager", function (require) {
                             var index = _.findIndex(action.view, [false, "form"]);
                             action.views.splice(index, 0, [false, "formPWA"]);
                         }
-                        debugger;
                         return action;
                     }, this._invalidate.bind(this, this._cache.actions, key));
             }

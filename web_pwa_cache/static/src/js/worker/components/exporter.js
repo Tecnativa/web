@@ -70,6 +70,7 @@ const Exporter = DatabaseComponent.extend({
      */
     onchange: function (model, data) {
         return new Promise(async (resolve) => {
+            console.log("----- ONCHANGE! 11");
             const modif_state = data.args[1];
             let fields_changed = data.args[2];
             if (typeof fields_changed === "string") {
@@ -77,22 +78,25 @@ const Exporter = DatabaseComponent.extend({
             }
             const params = _.pick(modif_state, fields_changed);
             const res = {value: {}, warnings: []};
+            console.log("----- ONCHANGE! 22");
             try {
                 const records = await this._db.getRecords("webclient", "onchange", [
                     model,
-                    field_changed,
+                    fields_changed.join(),
                     JSON.stringify(params),
                 ]);
-                const jscompiler = new JSSandbox();
+                console.log("----- ONCHANGE! 33");
+                console.log(records);
+                const sandbox = new JSSandbox();
                 for (const record of records) {
-                    const value = false;
-                    const warnings = false;
+                    let value = false;
+                    let warnings = false;
                     if (typeof record.changes !== 'undefined') {
                         value = record.changes.value;
                         warnings = record.changes.warnings;
                     } else if (typeof record.formula !== 'undefined') {
-                        jscompiler.compile(record.formula);
-                        const changes = jscompiler.run(modif_state);
+                        sandbox.compile(record.formula);
+                        const changes = sandbox.run(modif_state);
                         value = changes.value;
                         warnings = changes.warnings;
                         return resolve(changes);
@@ -105,7 +109,8 @@ const Exporter = DatabaseComponent.extend({
                     }
                 }
             } catch (err) {
-                // do nothing.
+                console.log(`[ServiceWorker] Can't process the given onchange for the fields '${fields_changed.join()}' on the model '${model}'`);
+                console.log(err);
             }
 
             return resolve(res);
