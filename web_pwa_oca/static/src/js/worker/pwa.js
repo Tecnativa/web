@@ -8,28 +8,28 @@
  * this class is instantiated.
  */
 
-odoo.define("web_pwa_oca.PWA", function (require) {
+odoo.define("web_pwa_oca.PWA", function(require) {
     "use strict";
 
     const OdooClass = require("web.Class");
 
     const PWA = OdooClass.extend({
         // eslint-disable-next-line
-        init: function (params) {
+        init: function(params) {
             // To be overridden
         },
 
         /**
          * @returns {Promise}
          */
-        start: function () {
+        start: function() {
             return Promise.resolve();
         },
 
         /**
          * @returns {Promise}
          */
-        installWorker: function () {
+        installWorker: function() {
             // To be overridden
             return Promise.resolve();
         },
@@ -37,7 +37,7 @@ odoo.define("web_pwa_oca.PWA", function (require) {
         /**
          * @returns {Promise}
          */
-        activateWorker: function () {
+        activateWorker: function() {
             // To be overridden
             return Promise.resolve();
         },
