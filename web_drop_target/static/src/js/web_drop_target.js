@@ -160,6 +160,7 @@ odoo.define("web_drop_target", function(require) {
                     this._drop_overlay.css("background", "#FF000020");
                 }
                 o_content.append(this._drop_overlay);
+                jQuery(".o_file_drop_zone_container").removeClass("d-none");
             }
         },
 
@@ -168,6 +169,7 @@ odoo.define("web_drop_target", function(require) {
                 this._drop_overlay.remove();
                 this._drop_overlay = null;
             }
+            jQuery(".o_file_drop_zone_container").addClass("d-none");
         },
     };
 
