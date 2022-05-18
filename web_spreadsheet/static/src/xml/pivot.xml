@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t
+        t-name="web_spreadsheet.PivotView"
+        t-inherit="web.PivotView.Buttons"
+        t-inherit-mode="extension"
+    >
+        <xpath expr="//div[hasclass('btn-group')][1]">
+            <div class="btn-group" role="toolbar" aria-label="Insert in Spreadsheet">
+                <button
+                    class="btn btn-secondary o_pivot_add_spreadsheet"
+                    t-on-click="onClickSpreadsheet()"
+                >
+                    Insert in Spreadsheet
+                </button>
+            </div>
+        </xpath>
+    </t>
+</templates>

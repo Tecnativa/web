@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+
+    <t t-name="web_spreadsheet.SpreadsheetView" owl="1">
+        <Layout viewType="'spreadsheet'">
+            <Renderer model="model" />
+        </Layout>
+    </t>
+
+</templates>
