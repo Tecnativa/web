@@ -1,9 +1,7 @@
 /** @odoo-module **/
 
 const {Component} = owl;
-// import Spreadsheet from "../lib/xspreadsheet.js"
 
-console.log(Component);
 
 export class SpreadsheetRenderer extends Component {
     mounted() {
@@ -19,9 +17,7 @@ export class SpreadsheetRenderer extends Component {
                     {
                         tip: "Save",
                         icon: saveIcon,
-                        onClick: (data, sheet) => {
-                            console.log("click save button：", data, sheet);
-                        },
+                        onClick: this.onClickSave.bind(this),
                     },
                 ],
             },
@@ -31,6 +27,11 @@ export class SpreadsheetRenderer extends Component {
             },
         });
     }
+
+    onClickSave(data, sheet) {
+        this.props.model.saveSpreadSheet(data, sheet);
+    }
 }
+
 
 SpreadsheetRenderer.template = "web_spreadsheet.SpreadsheetRenderer";

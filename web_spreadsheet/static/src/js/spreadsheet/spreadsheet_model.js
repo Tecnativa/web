@@ -14,5 +14,23 @@ export class SpreadsheetModel extends Model {
         };
     }
 
+    async saveSpreadSheet(data, sheet) {
+        const sheet_rows = sheet.rows;
+        const record = this._getRecordData(sheet_rows);
+        const save_prom = this.keepLast.add(this.orm.create("spreadsheet", record));
+        try {
+            await save_prom;
+        } catch (err) {
+            console.error("Something bad was happend");
+        }
+    }
+
+    _getRecordData(rows) {
+        return {
+            name: "This is a test",
+            data: JSON.stringify(rows),
+        }
+    }
+
     async _loadData(config, prune = true) {}
 }
