@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <t t-name="web_spreadsheet.SpreadsheetRenderer" owl="1">
-        <div id="xspreadsheet" class="h-100" />
+        <div id="xspreadsheet" class="h-100" t-on-spreadsheet-load-data="_onLoadData" />
     </t>
 
 </templates>

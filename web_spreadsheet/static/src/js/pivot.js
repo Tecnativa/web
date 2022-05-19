@@ -11,7 +11,7 @@ patch(PivotView.prototype, "web_spreadsheet.pivot", {
                 name: "TEST",
                 views: [[false, "spreadsheet"]],
                 view_mode: "spreadsheet",
-                res_model: "sale.order",
+                res_model: "spreadsheet",
                 // domain: domain,
             },
             {

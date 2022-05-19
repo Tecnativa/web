@@ -10,11 +10,9 @@
     "license": "LGPL-3",
     "application": False,
     "installable": True,
-    "depends": ["web", "sale"],
+    "depends": ["web"],
     "data": [
-        # TODO: Delete following line
         "security/ir.model.access.csv",
-        "views/sale_order_views.xml",
         "views/spreadsheet_views.xml",
     ],
     "demo": [],

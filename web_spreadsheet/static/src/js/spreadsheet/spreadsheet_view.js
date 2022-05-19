@@ -19,7 +19,10 @@ export class SpreadsheetView extends Component {
             controlPanel: false,
             searchPanel: false,
         };
-        useSubEnv({searchModel: searchModel});
+        useSubEnv({
+            searchModel: searchModel,
+            bus: new owl.core.EventBus(),
+        });
 
         let modelParams = {};
         if (this.props.state) {
@@ -28,6 +31,7 @@ export class SpreadsheetView extends Component {
         } else {
             modelParams.metaData = {
                 resModel: this.props.resModel,
+                resID: this.props.context.active_id,
             };
         }
 
