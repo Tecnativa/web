@@ -31,7 +31,8 @@ odoo.define("web_pwa_oca.PWAManager", function (require) {
          */
         init: function () {
             this._super.apply(this, arguments);
-            if (!("serviceWorker" in navigator)) {
+            this._isServiceWorkerSupported = "serviceWorker" in navigator;
+            if (!this._isServiceWorkerSupported) {
                 console.error(
                     _t(
                         "Service workers are not supported! Maybe you are not using HTTPS or you work in private mode."
@@ -49,10 +50,10 @@ odoo.define("web_pwa_oca.PWAManager", function (require) {
          * @param {String} sw_script
          * @returns {Promise}
          */
-        registerServiceWorker: function (sw_script) {
+        registerServiceWorker: function (sw_script, options) {
             return this._service_worker
-                .register(sw_script)
-                .then(this._onRegisterServiceWorker)
+                .register(sw_script, options)
+                .then(this._onRegisterServiceWorker.bind(this))
                 .catch(function (error) {
                     console.log(_t("[ServiceWorker] Registration failed: "), error);
                 });

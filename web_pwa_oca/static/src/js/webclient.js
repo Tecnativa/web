@@ -26,5 +26,7 @@ odoo.define("web_pwa_oca.pwa_launch", function (require) {
     core.bus.on("web_client_ready", null, function () {
         console.log("Load PWA Manager");
         this.pwa_manager = new PWAManager(this);
+        const def = this.pwa_manager.start();
+        return Promise.all([this._super.apply(this, arguments), def]);
     });
 });
