@@ -1,6 +1,6 @@
 // Copyright 2020 Tecnativa - Alexandre Díaz
 // License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
+odoo.define("web_widget_one2many_product_picker.BasicModel", function (require) {
     "use strict";
 
     var BasicModel = require("web.BasicModel");
@@ -10,7 +10,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
         /**
          * @override
          */
-        init: function() {
+        init: function () {
             this._super.apply(this, arguments);
         },
 
@@ -21,7 +21,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {String} id
          * @returns {Boolean}
          */
-        exists: function(id) {
+        exists: function (id) {
             return !_.isEmpty(this.localData[id]);
         },
 
@@ -29,7 +29,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {String} id
          * @param {Object} context
          */
-        updateRecordContext: function(id, context) {
+        updateRecordContext: function (id, context) {
             this.localData[id].context = _.extend(
                 {},
                 this.localData[id].context,
@@ -41,7 +41,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {String} id
          * @returns {Boolean}
          */
-        isSaving: function(id) {
+        isSaving: function (id) {
             var data = this.localData[id];
             return data._virtual || false;
         },
@@ -50,7 +50,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {String} id
          * @returns {Boolean}
          */
-        isPureVirtual: function(id) {
+        isPureVirtual: function (id) {
             var data = this.localData[id];
             return data._virtual || false;
         },
@@ -59,7 +59,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {String} id
          * @param {Boolean} status
          */
-        setPureVirtual: function(id, status) {
+        setPureVirtual: function (id, status) {
             var data = this.localData[id];
             if (status) {
                 data._virtual = true;
@@ -71,10 +71,10 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
         /**
          * @param {String} id
          */
-        unsetDirty: function(id) {
+        unsetDirty: function (id) {
             var data = this.localData[id];
             data._isDirty = false;
-            this._visitChildren(data, function(r) {
+            this._visitChildren(data, function (r) {
                 r._isDirty = false;
             });
         },
@@ -86,14 +86,14 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {String} id
          * @returns {Boolean}
          */
-        removeVirtualRecord: function(id) {
+        removeVirtualRecord: function (id) {
             if (!this.isPureVirtual(id)) {
                 return false;
             }
 
             var data = this.localData[id];
             var to_remove = [];
-            this._visitChildren(data, function(item) {
+            this._visitChildren(data, function (item) {
                 to_remove.push(item.id);
             });
 
@@ -115,7 +115,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {Object} params
          * @returns {Deferred}
          */
-        _makeDefaultRecordNoDatapoint: function(record, params) {
+        _makeDefaultRecordNoDatapoint: function (record, params) {
             var self = this;
 
             var targetView = params.viewType;
@@ -148,7 +148,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                 {
                     shadow: true,
                 }
-            ).then(function(result) {
+            ).then(function (result) {
                 // Interrupt point (used in instant search)
                 if (!self.exists(record.id)) {
                     return $.Deferred().reject();
@@ -170,7 +170,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
 
                 return self
                     .applyDefaultValues(record.id, result, {fieldNames: fieldNames})
-                    .then(function() {
+                    .then(function () {
                         if (!self.exists(record.id)) {
                             return $.Deferred().reject();
                         }
@@ -179,7 +179,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                         if (!self.exists(record.id)) {
                             return $.Deferred().reject();
                         }
-                        var always = function() {
+                        var always = function () {
                             if (record._warning) {
                                 if (params.allowWarning) {
                                     delete record._warning;
@@ -194,19 +194,19 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                             .guardedCatch(always);
                         return def;
                     })
-                    .then(function() {
+                    .then(function () {
                         if (!self.exists(record.id)) {
                             return $.Deferred().reject();
                         }
                         return self._fetchRelationalData(record);
                     })
-                    .then(function() {
+                    .then(function () {
                         if (!self.exists(record.id)) {
                             return $.Deferred().reject();
                         }
                         return self._postprocess(record);
                     })
-                    .then(function() {
+                    .then(function () {
                         if (!self.exists(record.id)) {
                             return $.Deferred().reject();
                         }
@@ -228,7 +228,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {Object} options
          * @returns {Object}
          */
-        createVirtualDatapoint: function(listID, options) {
+        createVirtualDatapoint: function (listID, options) {
             var list = this.localData[listID];
             var context = _.extend({}, this._getContext(list), options.context);
 
@@ -295,7 +295,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {Object} options
          * @returns {Deferred}
          */
-        createVirtualRecord: function(listID, options) {
+        createVirtualRecord: function (listID, options) {
             var self = this;
             var list = this.localData[listID];
             var context = _.extend(
@@ -316,7 +316,9 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                 doNotSetDirty: true,
             };
 
-            return this._makeDefaultRecord(list.model, params).then(function(recordID) {
+            return this._makeDefaultRecord(list.model, params).then(function (
+                recordID
+            ) {
                 self.setPureVirtual(recordID, true);
                 self.updateRecordContext(recordID, {
                     ignore_warning: true,
@@ -338,14 +340,14 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          *
          * @override
          */
-        _performOnChange: function(record) {
+        _performOnChange: function (record) {
             if (record && record.context) {
                 record.context.not_onchange = false;
                 var this_mp = _.clone(this);
                 if (record.context.shadow) {
                     // Force use 'shadow'
                     var super__rpc_call = this._rpc;
-                    this_mp._rpc = function(params, options) {
+                    this_mp._rpc = function (params, options) {
                         options = options || {};
                         options.shadow = true;
                         return super__rpc_call.call(this, params, options);
@@ -354,7 +356,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                 if (record.context.ignore_warning) {
                     var super_trigger_up_call = this.trigger_up;
                     // Avoid show warnings
-                    this_mp.trigger_up = function(event_name, data) {
+                    this_mp.trigger_up = function (event_name, data) {
                         if (event_name === "warning" && data.type === "dialog") {
                             // Do nothing
                             return;
@@ -374,7 +376,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          *
          * @override
          */
-        _applyOnChange: function(values, record) {
+        _applyOnChange: function (values, record) {
             if (!this.exists(record.id)) {
                 return $.Deferred().reject();
             }
@@ -386,7 +388,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          *
          * @override
          */
-        _applyX2ManyChange: function(record, fieldName, command) {
+        _applyX2ManyChange: function (record, fieldName, command) {
             if (command.operation === "ADD_MULTIPLE") {
                 var self = this;
                 var localID =
@@ -402,7 +404,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                 // subrecord form view but not in the kanban or list view), so
                 // to ensure that onchanges are correctly handled, we extend the
                 // list's fields with those in the created record
-                _.each(command.ids, function(id) {
+                _.each(command.ids, function (id) {
                     var newRecord = self.localData[id];
                     _.defaults(list.fields, newRecord.fields);
                     _.defaults(list.fieldsInfo, newRecord.fieldsInfo);
@@ -422,7 +424,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          *
          * @override
          */
-        _buildOnchangeSpecs: function(record) {
+        _buildOnchangeSpecs: function (record) {
             var specs = this._super.apply(this, arguments);
             // This is necessary to improve the performance
             if (record.model === "sale.order" && specs) {
@@ -462,7 +464,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {String} recordID
          * @returns {Boolean}
          */
-        hasChanges: function(recordID) {
+        hasChanges: function (recordID) {
             var record = this.localData[recordID];
             return record && !_.isEmpty(record._changes);
         },
@@ -480,7 +482,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {Object} context
          * @returns {Deferred}
          */
-        fetchNameSearchFull: function(
+        fetchNameSearchFull: function (
             model_fields,
             model,
             search_val,
@@ -505,8 +507,8 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                     limit: 999999,
                     context: context || {},
                 },
-            }).then(function(results) {
-                var record_ids = results.map(function(item) {
+            }).then(function (results) {
+                var record_ids = results.map(function (item) {
                     return item[0];
                 });
                 return self.fetchGenericRecords(
@@ -533,7 +535,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
          * @param {Object} context
          * @returns {Deferred}
          */
-        fetchGenericRecords: function(
+        fetchGenericRecords: function (
             model_fields,
             model,
             domain,
@@ -553,7 +555,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
                 offset: offset,
                 orderBy: orderby,
                 kwargs: {context: context},
-            }).then(function(result) {
+            }).then(function (result) {
                 for (var index in result) {
                     var record = result[index];
                     for (var fieldName in record) {
@@ -570,7 +572,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function(require) {
             });
         },
 
-        fetchModelFieldsInfo: function(model) {
+        fetchModelFieldsInfo: function (model) {
             return this._rpc({
                 model: model,
                 method: "fields_get",

@@ -1,6 +1,6 @@
 // Copyright 2020 Tecnativa - Alexandre Díaz
 // License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-odoo.define("web_widget_one2many_product_picker.tools", function(require) {
+odoo.define("web_widget_one2many_product_picker.tools", function (require) {
     "use strict";
 
     var field_utils = require("web.field_utils");

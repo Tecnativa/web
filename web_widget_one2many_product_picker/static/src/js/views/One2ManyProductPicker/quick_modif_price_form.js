@@ -3,14 +3,14 @@
 // License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 odoo.define(
     "web_widget_one2many_product_picker.ProductPickerQuickModifPriceForm",
-    function(require) {
+    function (require) {
         "use strict";
 
         var core = require("web.core");
         var Widget = require("web.Widget");
         var widgetRegistry = require("web.widget_registry");
-        var ProductPickerQuickModifPriceFormView = require("web_widget_one2many_product_picker.ProductPickerQuickModifPriceFormView")
-            .ProductPickerQuickModifPriceFormView;
+        var ProductPickerQuickModifPriceFormView =
+            require("web_widget_one2many_product_picker.ProductPickerQuickModifPriceFormView").ProductPickerQuickModifPriceFormView;
 
         var qweb = core.qweb;
 
@@ -31,7 +31,7 @@ odoo.define(
             /**
              * @override
              */
-            init: function(parent, options) {
+            init: function (parent, options) {
                 this._super.apply(this, arguments);
                 this.trigger_up("pause_auto_save");
                 this.state = options.state;
@@ -55,9 +55,9 @@ odoo.define(
             /**
              * @override
              */
-            start: function() {
+            start: function () {
                 var self = this;
-                this._super.apply(this, arguments).then(function() {
+                this._super.apply(this, arguments).then(function () {
                     var fieldsView = {
                         arch: self._generateFormArch(),
                         fields: self.fields,
@@ -102,28 +102,33 @@ odoo.define(
                     if (self.id) {
                         self.basicFieldParams.model.save(self.id, {savePoint: true});
                     }
-                    return self.formView.getController(self).then(function(controller) {
-                        self.controller = controller;
-                        self.$(".modal-body").empty();
-                        self.controller.appendTo(self.$(".modal-body"));
-                        self.$el.on("hidden.bs.modal", self._onModalHidden.bind(self));
-                        self.$el.find(".oe_record_change").removeClass("d-none");
-                        return controller;
-                    });
+                    return self.formView
+                        .getController(self)
+                        .then(function (controller) {
+                            self.controller = controller;
+                            self.$(".modal-body").empty();
+                            self.controller.appendTo(self.$(".modal-body"));
+                            self.$el.on(
+                                "hidden.bs.modal",
+                                self._onModalHidden.bind(self)
+                            );
+                            self.$el.find(".oe_record_change").removeClass("d-none");
+                            return controller;
+                        });
                 });
             },
 
             /**
              * @override
              */
-            destroy: function() {
+            destroy: function () {
                 this._restoreNoFetch();
                 this.trigger_up("resume_auto_save");
                 this.$el.off("hidden.bs.modal");
                 this._super.apply(this, arguments);
             },
 
-            on_attach_callback: function() {
+            on_attach_callback: function () {
                 // Do nothing
             },
 
@@ -131,7 +136,7 @@ odoo.define(
              * @private
              * @returns {String}
              */
-            _generateFormArch: function() {
+            _generateFormArch: function () {
                 var wanted_field_states = this._getWantedFieldState();
                 var template =
                     "<templates><t t-name='One2ManyProductPicker.QuickModifPrice.Form'>";
@@ -186,7 +191,7 @@ odoo.define(
              * @private
              * @returns {Object}
              */
-            _getWantedFieldState: function() {
+            _getWantedFieldState: function () {
                 var wantedFieldState = {};
                 wantedFieldState[this.fieldMap.discount] = !this.canEditDiscount;
                 wantedFieldState[this.fieldMap.price_unit] = !this.canEditPrice;
@@ -196,7 +201,7 @@ odoo.define(
             /**
              * @private
              */
-            _onClickDiscard: function(ev) {
+            _onClickDiscard: function (ev) {
                 if (this.controller) {
                     this._hideControlButtons(true);
                     this.controller._onClickDiscard(ev);
@@ -206,13 +211,13 @@ odoo.define(
             /**
              * @private
              */
-            _onClickChange: function(ev) {
+            _onClickChange: function (ev) {
                 var self = this;
                 if (!this.controller) {
                     return;
                 }
                 self._hideControlButtons(true);
-                this.controller._onClickChange(ev).then(function(res) {
+                this.controller._onClickChange(ev).then(function (res) {
                     if (res) {
                         self.$el.modal("hide");
                     } else {
@@ -224,11 +229,11 @@ odoo.define(
             /**
              * @private
              */
-            _onModalHidden: function() {
+            _onModalHidden: function () {
                 this.destroy();
             },
 
-            _hideControlButtons: function(status) {
+            _hideControlButtons: function (status) {
                 this.$el.find(".oe_record_change").toggleClass("d-none", status);
                 this.$el.find(".oe_record_discard").toggleClass("d-none", status);
             },
@@ -236,7 +241,7 @@ odoo.define(
             /**
              * @private
              */
-            _restoreNoFetch: function() {
+            _restoreNoFetch: function () {
                 var record = this.basicFieldParams.model.get(this.id);
                 for (var field_name of this._fieldsInvisible) {
                     record.fieldsInfo[record.viewType][field_name].__no_fetch = false;

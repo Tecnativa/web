@@ -1,7 +1,7 @@
 /* global QUnit */
 // Copyright 2020 Tecnativa - Alexandre Díaz
 // License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-odoo.define("web_widget_one2many_product_picker.widget_tests", function(require) {
+odoo.define("web_widget_one2many_product_picker.widget_tests", function (require) {
     "use strict";
 
     var FormView = require("web.FormView");
@@ -9,7 +9,7 @@ odoo.define("web_widget_one2many_product_picker.widget_tests", function(require)
 
     var createView = testUtils.createView;
 
-    var getArch = function() {
+    var getArch = function () {
         return (
             "<form>" +
             '<field name="currency_id" invisible="1" />' +
@@ -31,7 +31,7 @@ odoo.define("web_widget_one2many_product_picker.widget_tests", function(require)
     QUnit.module(
         "Web Widget One2Many Product Picker",
         {
-            beforeEach: function() {
+            beforeEach: function () {
                 this.data = {
                     foo: {
                         fields: {
@@ -158,8 +158,8 @@ odoo.define("web_widget_one2many_product_picker.widget_tests", function(require)
                 };
             },
         },
-        function() {
-            QUnit.test("Load widget", function(assert) {
+        function () {
+            QUnit.test("Load widget", function (assert) {
                 assert.expect(4);
 
                 var form = createView({
@@ -172,7 +172,7 @@ odoo.define("web_widget_one2many_product_picker.widget_tests", function(require)
                         ids: [1],
                         index: 0,
                     },
-                    mockRPC: function(route, args) {
+                    mockRPC: function (route, args) {
                         if (route === "/web/dataset/call_kw/foo/read") {
                             assert.deepEqual(
                                 args.args[1],

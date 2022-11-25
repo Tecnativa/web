@@ -2,7 +2,7 @@
 // License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 odoo.define(
     "web_widget_one2many_product_picker.ProductPickerQuickModifPriceFormView",
-    function(require) {
+    function (require) {
         "use strict";
 
         /**
@@ -16,17 +16,17 @@ odoo.define(
 
         var qweb = core.qweb;
 
-        var ProductPickerQuickModifPriceFormRenderer = QuickCreateFormView.prototype.config.Renderer.extend(
-            {
+        var ProductPickerQuickModifPriceFormRenderer =
+            QuickCreateFormView.prototype.config.Renderer.extend({
                 /**
                  * @override
                  */
-                start: function() {
+                start: function () {
                     var self = this;
                     this.$el.addClass(
                         "oe_one2many_product_picker_form_view o_xxs_form_view"
                     );
-                    return this._super.apply(this, arguments).then(function() {
+                    return this._super.apply(this, arguments).then(function () {
                         self._appendPrice();
                     });
                 },
@@ -34,21 +34,20 @@ odoo.define(
                 /**
                  * @private
                  */
-                _appendPrice: function() {
+                _appendPrice: function () {
                     this.$el.find(".oe_price").remove();
                     this.$el.append(
                         qweb.render("One2ManyProductPicker.QuickModifPrice.Price")
                     );
                 },
-            }
-        );
+            });
 
-        var ProductPickerQuickModifPriceFormController = QuickCreateFormView.prototype.config.Controller.extend(
-            {
+        var ProductPickerQuickModifPriceFormController =
+            QuickCreateFormView.prototype.config.Controller.extend({
                 /**
                  * @override
                  */
-                init: function(parent, model, renderer, params) {
+                init: function (parent, model, renderer, params) {
                     this.fieldMap = params.fieldMap;
                     this.context = params.context;
                     this.currencyField = params.currencyField;
@@ -60,9 +59,9 @@ odoo.define(
                 /**
                  * @override
                  */
-                start: function() {
+                start: function () {
                     var self = this;
-                    return this._super.apply(this, arguments).then(function() {
+                    return this._super.apply(this, arguments).then(function () {
                         var record = self.model.get(self.handle);
                         self._updatePrice(record.data);
                     });
@@ -71,7 +70,7 @@ odoo.define(
                 /**
                  * @override
                  */
-                _onFieldChanged: function(ev) {
+                _onFieldChanged: function (ev) {
                     this._super.apply(this, arguments);
                     if (!_.isEmpty(ev.data.changes)) {
                         this.model.updateRecordContext(this.handle, {
@@ -83,7 +82,7 @@ odoo.define(
                 /**
                  * @override
                  */
-                _applyChanges: function() {
+                _applyChanges: function () {
                     return this._super.apply(this, arguments).then(() => {
                         var record = this.model.get(this.handle);
                         this._updatePrice(record.data);
@@ -94,7 +93,7 @@ odoo.define(
                  * @private
                  * @param {Object} values
                  */
-                _updatePrice: function(values) {
+                _updatePrice: function (values) {
                     var price_reduce = tools.priceReduce(
                         values[this.fieldMap.price_unit],
                         values[this.fieldMap.discount]
@@ -115,7 +114,7 @@ odoo.define(
                  * @private
                  * @param {MouseEvent} ev
                  */
-                _onClickChange: function(ev) {
+                _onClickChange: function (ev) {
                     var self = this;
                     var def = $.Deferred();
                     ev.stopPropagation();
@@ -154,11 +153,11 @@ odoo.define(
                             reload: true,
                             savePoint: true,
                             viewType: "form",
-                        }).then(function() {
+                        }).then(function () {
                             def.resolve(true);
                             self.trigger_up("create_quick_record", {
                                 id: self.handle,
-                                on_onchange: function() {
+                                on_onchange: function () {
                                     self.trigger_up("block_card", {status: false});
                                     self._enableQuickCreate();
                                 },
@@ -169,7 +168,7 @@ odoo.define(
                         // If is a "normal" record, update it
                         this.trigger_up("update_quick_record", {
                             id: this.handle,
-                            on_onchange: function() {
+                            on_onchange: function () {
                                 self.trigger_up("block_card", {status: false});
                                 self._enableQuickCreate();
                             },
@@ -182,7 +181,7 @@ odoo.define(
                  * @private
                  * @param {MouseEvent} ev
                  */
-                _onClickDiscard: function(ev) {
+                _onClickDiscard: function (ev) {
                     var self = this;
                     ev.stopPropagation();
                     if (!this.model.isDirty(this.handle)) {
@@ -201,7 +200,7 @@ odoo.define(
                     });
                     this.trigger_up("update_quick_record", {
                         id: this.handle,
-                        on_onchange: function() {
+                        on_onchange: function () {
                             self.trigger_up("block_card", {status: false});
                             self._enableQuickCreate();
                         },
@@ -212,7 +211,7 @@ odoo.define(
                 /**
                  * @private
                  */
-                _disableQuickCreate: function() {
+                _disableQuickCreate: function () {
                     // Ensures that the record won't be created twice
                     this.$el.addClass("o_disabled");
                     this.$("input:not(:disabled),button:not(:disabled)")
@@ -223,15 +222,14 @@ odoo.define(
                 /**
                  * @private
                  */
-                _enableQuickCreate: function() {
+                _enableQuickCreate: function () {
                     // Allows to create again
                     this.$el.removeClass("o_disabled");
                     this.$("input.o_temporarily_disabled,button.o_temporarily_disabled")
                         .removeClass("o_temporarily_disabled")
                         .attr("disabled", false);
                 },
-            }
-        );
+            });
 
         var ProductPickerQuickModifPriceFormView = QuickCreateFormView.extend({
             config: _.extend({}, QuickCreateFormView.prototype.config, {
@@ -239,7 +237,7 @@ odoo.define(
                 Controller: ProductPickerQuickModifPriceFormController,
             }),
 
-            init: function(viewInfo, params) {
+            init: function (viewInfo, params) {
                 this._super.apply(this, arguments);
                 this.controllerParams.fieldMap = params.fieldMap;
                 this.controllerParams.context = params.context;
@@ -249,8 +247,10 @@ odoo.define(
         });
 
         return {
-            ProductPickerQuickModifPriceFormRenderer: ProductPickerQuickModifPriceFormRenderer,
-            ProductPickerQuickModifPriceFormController: ProductPickerQuickModifPriceFormController,
+            ProductPickerQuickModifPriceFormRenderer:
+                ProductPickerQuickModifPriceFormRenderer,
+            ProductPickerQuickModifPriceFormController:
+                ProductPickerQuickModifPriceFormController,
             ProductPickerQuickModifPriceFormView: ProductPickerQuickModifPriceFormView,
         };
     }

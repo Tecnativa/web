@@ -1,6 +1,6 @@
 // Copyright 2021 Tecnativa - Alexandre Díaz
 // License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
-odoo.define("web_widget_one2many_product_picker.FormController", function(require) {
+odoo.define("web_widget_one2many_product_picker.FormController", function (require) {
     "use strict";
 
     var FormController = require("web.FormController");
@@ -15,17 +15,14 @@ odoo.define("web_widget_one2many_product_picker.FormController", function(requir
          *
          * @override
          */
-        saveRecord: function() {
+        saveRecord: function () {
             var self = this;
-            var always = function(changedFields) {
+            var always = function (changedFields) {
                 self.renderer.invokeProductPicker(self.handle, "onDocumentSave", false);
                 return changedFields;
             };
             this.renderer.invokeProductPicker(this.handle, "onDocumentSave", true);
-            return this._super
-                .apply(this, arguments)
-                .then(always)
-                .guardedCatch(always);
+            return this._super.apply(this, arguments).then(always).guardedCatch(always);
         },
 
         /**
@@ -33,10 +30,10 @@ odoo.define("web_widget_one2many_product_picker.FormController", function(requir
          *
          * @override
          */
-        _confirmChange: function(id, fields, e) {
+        _confirmChange: function (id, fields, e) {
             var self = this;
             id = id || this.handle;
-            return this._super.apply(this, arguments).then(function(resetWidgets) {
+            return this._super.apply(this, arguments).then(function (resetWidgets) {
                 if (self.renderer) {
                     self.renderer.invokeProductPicker(
                         id,
@@ -53,7 +50,7 @@ odoo.define("web_widget_one2many_product_picker.FormController", function(requir
          * @private
          * @param {CustomEvent} ev
          */
-        _onUsingProductPicker: function(ev) {
+        _onUsingProductPicker: function (ev) {
             this.model.updateRecordContext(this.handle, {
                 product_picker_field: ev.data.field,
                 product_picker_product_field: ev.data.product_field,

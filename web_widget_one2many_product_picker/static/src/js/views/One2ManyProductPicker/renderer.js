@@ -2,7 +2,7 @@
 // License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 odoo.define(
     "web_widget_one2many_product_picker.One2ManyProductPickerRenderer",
-    function(require) {
+    function (require) {
         "use strict";
 
         var core = require("web.core");
@@ -27,7 +27,7 @@ odoo.define(
             /**
              * @override
              */
-            init: function(parent, state, params) {
+            init: function (parent, state, params) {
                 this._super.apply(this, arguments);
                 this.widgets = [];
                 this.recordOptions = _.extend({}, params.record_options, {
@@ -44,7 +44,7 @@ odoo.define(
             /**
              * Propagate the event to the view widgets
              */
-            on_attach_callback: function() {
+            on_attach_callback: function () {
                 this._isInDom = true;
                 _.invoke(_.compact(this.widgets), "on_attach_callback");
             },
@@ -52,7 +52,7 @@ odoo.define(
             /**
              * Propagate the event to the view widgets
              */
-            on_detach_callback: function() {
+            on_detach_callback: function () {
                 this._isInDom = false;
                 _.invoke(_.compact(this.widgets), "on_detach_callback");
             },
@@ -60,21 +60,21 @@ odoo.define(
             /**
              * @override
              */
-            start: function() {
+            start: function () {
                 return this._super.apply(this, arguments);
             },
 
             /**
              * @param {Object} search_group
              */
-            updateSearchGroup: function(search_group) {
+            updateSearchGroup: function (search_group) {
                 this.search_group = search_group;
             },
 
             /**
              * @param {Boolean} block
              */
-            blockLoadMore: function(block) {
+            blockLoadMore: function (block) {
                 this.$btnLoadMore.attr("disabled", block);
             },
 
@@ -83,7 +83,7 @@ odoo.define(
              *
              * @override
              */
-            updateState: function(state, params) {
+            updateState: function (state, params) {
                 var self = this;
                 var force_update = params.force;
                 delete params.force;
@@ -92,12 +92,12 @@ odoo.define(
                     return this._super(state, sparams);
                 }
                 var old_state = _.clone(this.state.data);
-                return this._super(state, sparams).then(function() {
+                return this._super(state, sparams).then(function () {
                     self._updateStateRecords(old_state);
                 });
             },
 
-            canBeUpdated: function() {
+            canBeUpdated: function () {
                 if (!this.getParent()) {
                     return false;
                 }
@@ -122,7 +122,7 @@ odoo.define(
              * @param {Object} state
              * @returns {Boolean}
              */
-            _isValidLineState: function(state) {
+            _isValidLineState: function (state) {
                 return (
                     state &&
                     state.data[this.options.field_map.product] &&
@@ -132,7 +132,7 @@ odoo.define(
                 );
             },
 
-            getProductIdFromState: function(state) {
+            getProductIdFromState: function (state) {
                 return (
                     state &&
                     state.data[this.options.field_map.product] &&
@@ -141,9 +141,9 @@ odoo.define(
                 );
             },
 
-            getWidgetsByProduct: function(product_id) {
+            getWidgetsByProduct: function (product_id) {
                 var self = this;
-                return _.filter(this.widgets, function(item) {
+                return _.filter(this.widgets, function (item) {
                     return (
                         self.getProductIdFromState(item.state) === product_id ||
                         item.recordSearch.id === product_id
@@ -151,12 +151,12 @@ odoo.define(
                 });
             },
 
-            getWidgetsWithoutOnchange: function() {
+            getWidgetsWithoutOnchange: function () {
                 if (!this.getParent()) {
                     return false;
                 }
                 var model = this.getParent().getBasicFieldParams().model;
-                return _.filter(this.widgets, function(item) {
+                return _.filter(this.widgets, function (item) {
                     return (
                         model.localData[item.state.id] &&
                         model.localData[item.state.id].context.not_onchange
@@ -173,7 +173,7 @@ odoo.define(
              * @param {Array} states
              * @returns {Array}
              */
-            _processStatesToDestroy: function(old_states) {
+            _processStatesToDestroy: function (old_states) {
                 var self = this;
                 // States to remove
                 // In 12.0, Odoo generates new ids for the states, so
@@ -185,7 +185,7 @@ odoo.define(
                     if (!this._isValidLineState(old_state)) {
                         continue;
                     }
-                    var in_current_state = _.some(this.state.data, function(state) {
+                    var in_current_state = _.some(this.state.data, function (state) {
                         return (
                             self._isValidLineState(state) && state.id === old_state.id
                         );
@@ -238,7 +238,7 @@ odoo.define(
              * @private
              * @returns {Array}
              */
-            _processCurrentStates: function(old_states) {
+            _processCurrentStates: function (old_states) {
                 var to_destroy = this._processStatesToDestroy(old_states);
                 // Records to Update or Create
                 var model = this.getParent().getBasicFieldParams().model;
@@ -289,7 +289,7 @@ odoo.define(
                             search_record = widget.recordSearch;
                             const in_search_records = _.some(
                                 this.search_records,
-                                function(item) {
+                                function (item) {
                                     return item.id === search_record.id;
                                 }
                             );
@@ -324,7 +324,7 @@ odoo.define(
              *
              * @returns {Deferred}
              */
-            checkVirtualRecords: function() {
+            checkVirtualRecords: function () {
                 if (this.search_group.name === "main_lines") {
                     return $.when();
                 }
@@ -342,7 +342,7 @@ odoo.define(
              *
              * @returns {Array}
              */
-            _processVirtualRecords: function() {
+            _processVirtualRecords: function () {
                 var model = this.getParent().getBasicFieldParams().model;
                 var products_done = [];
                 var to_add = [];
@@ -360,24 +360,24 @@ odoo.define(
                     }
 
                     // Only add 'pure virtual' records if don't have a line
-                    var existing_widgets = _.filter(widgets, function(widget) {
+                    var existing_widgets = _.filter(widgets, function (widget) {
                         return !widget.isMarkedToDestroy();
                     });
-                    var need_virtual = !_.some(existing_widgets, function(widget) {
+                    var need_virtual = !_.some(existing_widgets, function (widget) {
                         return widget.state && !model.isPureVirtual(widget.state.id);
                     });
                     if (
                         need_virtual &&
                         products_done.indexOf(search_record.id) === -1
                     ) {
-                        var has_virtual = _.some(existing_widgets, function(widget) {
+                        var has_virtual = _.some(existing_widgets, function (widget) {
                             return (
                                 !widget.state ||
                                 (widget.state && model.isPureVirtual(widget.state.id))
                             );
                         });
                         if (!has_virtual) {
-                            var search_record_index = _.max(widgets, function(widget) {
+                            var search_record_index = _.max(widgets, function (widget) {
                                 return widget.$el.index();
                             }).state.id;
                             to_add.push([
@@ -405,7 +405,7 @@ odoo.define(
              * @param {Object} old_states
              * @returns {Deferred}
              */
-            _updateStateRecords: function(old_states) {
+            _updateStateRecords: function (old_states) {
                 var self = this;
                 var record_defs = this._processCurrentStates(old_states);
                 var to_add_current = record_defs[0];
@@ -417,22 +417,23 @@ odoo.define(
                 }
 
                 return $.when(currentTasks)
-                    .then(function() {
+                    .then(function () {
                         return self.checkVirtualRecords();
                     })
-                    .then(function() {
-                        var widgets_to_destroy = _.filter(self.widgets, function(
-                            widget
-                        ) {
-                            return widget.isMarkedToDestroy();
-                        });
+                    .then(function () {
+                        var widgets_to_destroy = _.filter(
+                            self.widgets,
+                            function (widget) {
+                                return widget.isMarkedToDestroy();
+                            }
+                        );
                         self.widgets = _.difference(self.widgets, widgets_to_destroy);
                         _.invoke(widgets_to_destroy, "destroy");
                         return true;
                     });
             },
 
-            clearRecords: function() {
+            clearRecords: function () {
                 _.invoke(_.compact(this.widgets), "destroy");
                 this.widgets = [];
                 if (this.$recordsContainer) {
@@ -443,7 +444,7 @@ odoo.define(
             /**
              * @override
              */
-            _renderView: function() {
+            _renderView: function () {
                 _.invoke(_.compact(this.widgets), "destroy");
                 this.widgets = [];
                 this.$recordsContainer = $("<DIV/>", {
@@ -470,7 +471,7 @@ odoo.define(
              * @param {Array} datas
              * @returns {Array}
              */
-            _sort_search_data: function(datas) {
+            _sort_search_data: function (datas) {
                 if (this.search_group.name === "main_lines") {
                     var field_name = this.options.field_map.product;
                     for (var index_datas in datas) {
@@ -488,7 +489,7 @@ odoo.define(
                     }
                     var sorted_datas = _.chain(datas)
                         .sortBy("_order_value")
-                        .map(function(item) {
+                        .map(function (item) {
                             return _.omit(item, "_order_value");
                         })
                         .value()
@@ -506,13 +507,13 @@ odoo.define(
              * @param {Array} results
              * @returns {Array}
              */
-            _processSearchRecords: function(results) {
+            _processSearchRecords: function (results) {
                 var model = this.getParent().getBasicFieldParams().model;
                 var field_name = this.options.field_map.product;
                 var records = [];
                 var states = [];
 
-                var test_values = function(field_value, record_search) {
+                var test_values = function (field_value, record_search) {
                     return (
                         (typeof field_value === "object" &&
                             field_value.data.id === record_search.id) ||
@@ -537,7 +538,7 @@ odoo.define(
                         widget_created = true;
                         // At this point the result has a state (line)
                         // Search if already exists a widget using the state
-                        var widget = _.find(this.widgets, function(widget) {
+                        var widget = _.find(this.widgets, function (widget) {
                             return (
                                 !widget.isMarkedToDestroy() &&
                                 widget.state &&
@@ -564,7 +565,7 @@ odoo.define(
                     var widgets = this.getWidgetsByProduct(record_search.id);
                     // Only can exists 'pure virtual' if no 'lines' assigned
                     if (_.isEmpty(widgets)) {
-                        var has_virtual = _.some(widgets, function(widget) {
+                        var has_virtual = _.some(widgets, function (widget) {
                             return (
                                 !widget.isMarkedToDestroy() &&
                                 (!widget.state ||
@@ -590,7 +591,7 @@ odoo.define(
              * @param {Int} id
              * @returns {Object}
              */
-            _getRecordDataById: function(id) {
+            _getRecordDataById: function (id) {
                 for (var index in this.state.data) {
                     var record = this.state.data[index];
                     if (record.id === id) {
@@ -605,7 +606,7 @@ odoo.define(
              * @param {Object} search_record
              * @returns {Object}
              */
-            _getRecordOptions: function(search_record) {
+            _getRecordOptions: function (search_record) {
                 return _.extend({}, this.recordOptions, {
                     fieldMap: this.options.field_map,
                     searchRecord: search_record,
@@ -628,14 +629,14 @@ odoo.define(
              * @param {Object} options
              * @returns {Array}
              */
-            _appendSearchRecords: function(search_records, options) {
+            _appendSearchRecords: function (search_records, options) {
                 var self = this;
                 var processed_info =
                     !options.no_process_records &&
                     this._processSearchRecords(search_records);
                 var records_to_add =
                     (processed_info && processed_info.records) || search_records;
-                _.each(records_to_add, function(search_record) {
+                _.each(records_to_add, function (search_record) {
                     // Get record state (if can)
                     var state_data = self._getRecordDataById(search_record.__id);
                     var widget_options = self._getRecordOptions(search_record);
@@ -662,7 +663,7 @@ odoo.define(
                     // a simple state data. Using simple state data instead of waiting for
                     // complete state (default + onchange) gives a low FCP time.
                     var def = ProductPickerRecord.appendTo(self.$recordsContainer).then(
-                        function(widget, widget_position) {
+                        function (widget, widget_position) {
                             if (typeof widget_position !== "undefined") {
                                 var $elm = self.$el.find(
                                     `[data-card-id="${widget_position}"]:first`
@@ -680,7 +681,7 @@ odoo.define(
             /**
              * @param {Boolean} status
              */
-            showLoadMore: function(status) {
+            showLoadMore: function (status) {
                 this.$btnLoadMore.toggleClass("d-none", !status);
             },
 
@@ -691,7 +692,7 @@ odoo.define(
              * @param {Object} options
              * @returns {Array}
              */
-            appendSearchRecords: function(search_records, options = {}) {
+            appendSearchRecords: function (search_records, options = {}) {
                 var self = this;
                 if (options.clear) {
                     this.clearRecords();
@@ -707,7 +708,7 @@ odoo.define(
                 var defsVirtualState = this.defsVirtualState;
                 delete this.defsVirtualState;
                 return [
-                    $.when(defs).then(function() {
+                    $.when(defs).then(function () {
                         if (!options.no_attach_widgets && self._isInDom) {
                             var new_widgets = self.widgets.slice(cur_widget_index);
                             _.invoke(new_widgets, "on_attach_callback");
@@ -715,31 +716,37 @@ odoo.define(
                         // Destroy unused
                         if (options.cleanup) {
                             self.search_records = _.compact(search_records);
-                            var widgets_to_destroy = _.filter(self.widgets, function(
-                                widget
-                            ) {
-                                return (
-                                    widget.isMarkedToDestroy() ||
-                                    !_.some(self.search_records, function(
-                                        search_record
-                                    ) {
-                                        return (
-                                            search_record.id ===
-                                                widget.recordSearch.id &&
-                                            !_.some(self.widgets, function(
-                                                comp_widget
-                                            ) {
+                            var widgets_to_destroy = _.filter(
+                                self.widgets,
+                                function (widget) {
+                                    return (
+                                        widget.isMarkedToDestroy() ||
+                                        !_.some(
+                                            self.search_records,
+                                            function (search_record) {
                                                 return (
-                                                    comp_widget !== widget &&
-                                                    comp_widget.state &&
-                                                    comp_widget.recordSearch.id ===
-                                                        widget.recordSearch.id
+                                                    search_record.id ===
+                                                        widget.recordSearch.id &&
+                                                    !_.some(
+                                                        self.widgets,
+                                                        function (comp_widget) {
+                                                            return (
+                                                                comp_widget !==
+                                                                    widget &&
+                                                                comp_widget.state &&
+                                                                comp_widget.recordSearch
+                                                                    .id ===
+                                                                    widget.recordSearch
+                                                                        .id
+                                                            );
+                                                        }
+                                                    )
                                                 );
-                                            })
-                                        );
-                                    })
-                                );
-                            });
+                                            }
+                                        )
+                                    );
+                                }
+                            );
                             _.invoke(widgets_to_destroy, "destroy");
                             self.widgets = _.difference(
                                 self.widgets,
@@ -750,7 +757,7 @@ odoo.define(
                             for (var search_record of search_records) {
                                 var has_search_record = _.some(
                                     self.search_records,
-                                    function(item) {
+                                    function (item) {
                                         return (
                                             item.id === search_record.id &&
                                             item.__id === search_record.__id
@@ -764,7 +771,7 @@ odoo.define(
                         }
                         return true;
                     }),
-                    $.when(defsVirtualState).then(function() {
+                    $.when(defsVirtualState).then(function () {
                         self.trigger_up("loading_records", {finished: true});
                     }),
                 ];
@@ -773,7 +780,7 @@ odoo.define(
             /**
              * @private
              */
-            _onClickLoadMore: function() {
+            _onClickLoadMore: function () {
                 this.$btnLoadMore.attr("disabled", true);
                 this.trigger_up("load_more");
             },
@@ -783,7 +790,7 @@ odoo.define(
              *
              * @param {Integer} index
              */
-            doWidgetFlip: function(index) {
+            doWidgetFlip: function (index) {
                 var widget = this.widgets[index];
                 var $actived_card = this.$el.find(".active");
                 if (widget.$card.hasClass("active")) {
@@ -794,11 +801,11 @@ odoo.define(
                     widget._processWidgetFields(widget.$back);
                     widget._processWidgets(widget.$back);
                     widget._processDynamicFields();
-                    $.when(widget.defs).then(function() {
+                    $.when(widget.defs).then(function () {
                         $actived_card.removeClass("active");
                         $actived_card.find(".oe_flip_card_front").removeClass("d-none");
                         widget.$card.addClass("active");
-                        setTimeout(function() {
+                        setTimeout(function () {
                             widget.$(".oe_flip_card_front").addClass("d-none");
                         }, 200);
                     });
@@ -812,7 +819,7 @@ odoo.define(
              * @private
              * @param {CustomEvent} evt
              */
-            _onRecordFlip: function(evt) {
+            _onRecordFlip: function (evt) {
                 var prev_widget_index = evt.data.prev_widget_index;
                 if (
                     typeof prev_widget_index !== "undefined" &&
@@ -820,9 +827,8 @@ odoo.define(
                 ) {
                     // Only check 'back' widgets so there is where the form was created
                     for (var index in this.widgets[prev_widget_index].widgets.back) {
-                        var widget = this.widgets[prev_widget_index].widgets.back[
-                            index
-                        ];
+                        var widget =
+                            this.widgets[prev_widget_index].widgets.back[index];
                         if (
                             widget.controller &&
                             widget.className ===
