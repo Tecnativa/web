@@ -364,7 +364,7 @@ odoo.define(
                     function () {
                         var args = py.PY_parseArgs(arguments, ["str"]);
                         return py.str.fromJSON(
-                            this._getMonetaryFieldValue(args.str.toJSON())
+                            this._getMonetaryFieldValue(args.str.toJSON()).toString()
                         );
                     }.bind(this)
                 );
@@ -430,15 +430,20 @@ odoo.define(
                         context: context,
                     }
                 );
+                record_def.record._changes = Object.assign(
+                    {...record_def.record.data},
+                    def_values
+                );
                 model
-                    .applyDefaultValues(record_def.record.id, def_values)
-                    .then(function () {
-                        return model._fetchRelationalData(record_def.record);
+                    .generateDefaultValues(record_def.record.id)
+                    .then(() => {
+                        debugger;
+                        return model._fetchRecord(record_def.record);
                     })
-                    .then(function () {
+                    .then(() => {
                         return model._postprocess(record_def.record);
                     })
-                    .then(function () {
+                    .then(() => {
                         // Self._timerOnChange = setTimeout(
                         //     function(current_batch_id, record_def) {
                         //         self._timerOnChange = false;
@@ -454,7 +459,7 @@ odoo.define(
                                 record_def.record,
                                 record_def.params
                             )
-                            .then(function () {
+                            .then(() => {
                                 if (record_def.record.context.aborted) {
                                     return;
                                 }

@@ -169,7 +169,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function (require) 
                 }
 
                 return self
-                    .applyDefaultValues(record.id, result, {fieldNames: fieldNames})
+                    ._applyOnChange(result, record, {fieldNames: fieldNames})
                     .then(function () {
                         if (!self.exists(record.id)) {
                             return $.Deferred().reject();
@@ -198,7 +198,7 @@ odoo.define("web_widget_one2many_product_picker.BasicModel", function (require) 
                         if (!self.exists(record.id)) {
                             return $.Deferred().reject();
                         }
-                        return self._fetchRelationalData(record);
+                        return self._fetchRecord(record);
                     })
                     .then(function () {
                         if (!self.exists(record.id)) {

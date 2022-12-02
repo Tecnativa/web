@@ -16,20 +16,20 @@ odoo.define(
 
         var qweb = core.qweb;
 
-        BasicModel.include({
-            _applyOnChange: function (values, record, viewType) {
-                // Ignore changes by record context 'ignore_onchanges' fields
-                if ("ignore_onchanges" in record.context) {
-                    var ignore_changes = record.context.ignore_onchanges;
-                    for (var index in ignore_changes) {
-                        var field_name = ignore_changes[index];
-                        delete values[field_name];
-                    }
-                    delete record.context.ignore_onchanges;
-                }
-                return this._super(values, record, viewType);
-            },
-        });
+//        BasicModel.include({
+//            _applyOnChange: function (values, record, viewType) {
+//                // Ignore changes by record context 'ignore_onchanges' fields
+//                if ("ignore_onchanges" in record.context) {
+//                    var ignore_changes = record.context.ignore_onchanges;
+//                    for (var index in ignore_changes) {
+//                        var field_name = ignore_changes[index];
+//                        delete values[field_name];
+//                    }
+//                    delete record.context.ignore_onchanges;
+//                }
+//                return this._super(values, record, viewType);
+//            },
+//        });
 
         var ProductPickerQuickCreateFormRenderer =
             QuickCreateFormView.prototype.config.Renderer.extend({
