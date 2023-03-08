@@ -61,7 +61,9 @@ class TestUi(odoo.tests.HttpCase):
         manifest_data = self.url_open("/web_pwa_oca/manifest.webmanifest")
         manifest_content_str = manifest_data.content.decode("utf-8")
         manifest_content = json.loads(manifest_content_str)
+        import logging
 
+        logging.info(manifest_content)
         self.assertEqual(manifest_content["icons"][0]["src"], "/web_pwa_oca/icon.svg")
         self.assertTrue(manifest_content["icons"][0]["type"].startswith("image/svg"))
         self.assertEqual(
@@ -95,6 +97,9 @@ class TestUi(odoo.tests.HttpCase):
             "sizes": "512x512",
             "type": "image/png",
         }
+        import logging
+
+        logging.info(manifest_content)
         self.assertTrue(expected_vals in manifest_content["icons"])
 
     def test_manifest_logo_upload_big(self):
