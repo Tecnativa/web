@@ -105,7 +105,12 @@ export const RemoteMeasureMixin = {
         if (this.start_add) {
             this.amount += this.input_val;
         }
-        this.$input.val(this.amount.toLocaleString(this.locale_code));
+        let total = this.amount;
+        if (this.tare) {
+            total = this.tare + this.amount;
+            this.$tare_info.find("span[name='real']").text(this.amount);
+        }
+        this.$input.val(total.toLocaleString(this.locale_code));
         this._setValue(this.$input.val());
     },
     /**
@@ -191,6 +196,14 @@ export const RemoteMeasureMixin = {
         this._awaitingMeasure();
         this._recordMeasure();
     },
+    _onClickTare(ev) {
+        ev.preventDefault();
+        const tare = parseFloat(ev.currentTarget.dataset.tare);
+        this.tare = Math.max(0, this.tare + tare);
+        this.$tare_info.find("span[name='tare']").text(this.tare);
+        this.$tare_info.find("span[name='real']").text(this.amount);
+        this._setMeasure();
+    },
     /**
      * Remote measure handle to start measuring
      * @returns {jQueryElement}
@@ -198,7 +211,9 @@ export const RemoteMeasureMixin = {
     _addRemoteMeasureWidgetStart() {
         return $(
             `
-            <span class="o_field_remote_device_start btn btn-primary mr-1">
+            <span class="o_field_remote_device_start btn btn-primary mr-1 ${
+                this.nodeOptions.extra_class || ""
+            }">
                 <i class="fa fa-thermometer-half">
             </span>
             `
@@ -211,7 +226,9 @@ export const RemoteMeasureMixin = {
     _addRemoteMeasureWidgetStartAdd() {
         return $(
             `
-            <span class="o_field_remote_device_start btn btn-link mr-1">
+            <span class="o_field_remote_device_start btn btn-link mr-1 ${
+                this.nodeOptions.extra_class || ""
+            }">
                 <i class="fa fa-plus">
             </span>
             `
@@ -224,11 +241,57 @@ export const RemoteMeasureMixin = {
     _addRemoteMeasureWidgetStop() {
         return $(
             `
-            <span class="o_field_remote_device_stop btn btn-secondary d-none mr-1">
+            <span class="o_field_remote_device_stop btn btn-secondary d-none mr-1 ${
+                this.nodeOptions.extra_class || ""
+            }">
                 <i class="fa fa-thermometer-empty">
             </span>
             `
         ).on("click", this._onValidateMeasure.bind(this));
+    },
+    _addRemoteMeasureWidgetTares() {
+        const tares = [];
+        const tare_template = (tare, text, {button_type, extra_class, func}) => {
+            const $template = $(
+                `
+                <btn class="btn ${button_type || "btn-outline-primary"} btn-lg ${
+                    extra_class || ""
+                }" data-tare="${tare}">
+                    ${text}
+                </btn>
+                `
+            );
+            if (func) {
+                $template.on("click", func.bind(this));
+            }
+            return $template;
+        };
+        this.tares.forEach((tare) => {
+            const $tare_group = $(`<div class="btn-group btn-group-lg mr-1" />`);
+            // Debugger
+            $tare_group.append(
+                tare_template(`-${tare}`, "-", {func: this._onClickTare})
+            );
+            $tare_group.append(
+                tare_template(tare, tare, {
+                    button_type: "btn-primary",
+                    extra_class: "disabled",
+                })
+            );
+            $tare_group.append(tare_template(tare, "+", {func: this._onClickTare}));
+            tares.push($tare_group);
+        });
+        return tares;
+    },
+    _addRemoteMeasureWidgetTareInfo() {
+        return $(
+            `
+            <small class="ml-1 mr-1 text-info">
+                TARE: <span name="tare">${this.tare}</span> ${this.uom.name}<br/>
+                REAL: <span name="real">${this.amount}</span>
+            </small>
+            `
+        );
     },
 };
 
@@ -262,6 +325,8 @@ export const RemoteMeasure = FieldFloat.extend(RemoteMeasureMixin, {
         }
         this.uom = this.recordData[this.nodeOptions.uom_field].data;
         this.allow_additive_measure = this.nodeOptions.allow_additive_measure;
+        this.tares = this.nodeOptions.tares;
+        this.tare = 0;
         // Add to your view options so you can log requests and responses
     },
     /**
@@ -311,13 +376,23 @@ export const RemoteMeasure = FieldFloat.extend(RemoteMeasureMixin, {
      */
     _renderEdit() {
         this.$el.empty();
-        var def = this._prepareInput(this.$input).appendTo(this.$el);
+        this.$input_group = $(`<div class="input_group" />`);
+        this.$el.prepend(this.$input_group);
+        var def = this._prepareInput(this.$input).appendTo(this.$input_group);
         // From locale format
+        this.attrs.class.split(" ").forEach((cls) => {
+            this.$input.addClass(cls);
+            this.$el.removeClass(cls);
+        });
+        if (this.nodeOptions.class) {
+            this.$el.addClass(this.nodeOptions.class);
+        }
         if (this.input_val === undefined) {
             let pre_value = this.$input.val() || "0";
             pre_value = pre_value.replace(this.thousands_sep, "");
             pre_value = pre_value.replace(this.decimal_separator, ".");
             this.input_val = parseFloat(pre_value);
+            this.amount = this.input_val;
         }
         this.start_add = false;
         const [device_uom = undefined] =
@@ -334,9 +409,17 @@ export const RemoteMeasure = FieldFloat.extend(RemoteMeasureMixin, {
         this.$stop_measure = this._addRemoteMeasureWidgetStop();
         if (this.allow_additive_measure && this.input_val > 0) {
             this.$start_measure_add = this._addRemoteMeasureWidgetStartAdd();
-            this.$el.prepend(this.$start_measure_add);
+            this.$input_group.prepend(this.$start_measure_add);
         }
-        this.$el.prepend(this.$start_measure, this.$stop_measure);
+        this.$input_group.prepend(this.$start_measure, this.$stop_measure);
+        if (this.tares && this.tares.length) {
+            this.$tare_group = $(`<div class="tare_group"/>`);
+            this.$el.prepend(this.$tare_group);
+            const tares = this._addRemoteMeasureWidgetTares();
+            this.$tare_info = this._addRemoteMeasureWidgetTareInfo();
+            this.$tare_group.prepend(this.$tare_info);
+            tares.forEach((tare) => this.$tare_group.prepend(tare));
+        }
         return def;
     },
     /**
