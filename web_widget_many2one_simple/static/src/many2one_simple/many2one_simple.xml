@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates id="template" xml:space="preserve">
+    <t t-name="web_widget_many2one_simple.Many2OneSimpleField">
+        <input type="text" class="o_input" />
+    </t>
+</templates>
