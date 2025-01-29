@@ -40,7 +40,7 @@ e-commerce product page.
 Usage
 =====
 
--  Go to Website > Configuration > Products > Attributes.
+-  Go to Website > eCommerce > Products > Attributes.
 -  Set an image in 'Website image' field to display this attribute in
    shop product detail.
 -  You can set alternative name for attribute in field "Website name".
@@ -74,6 +74,7 @@ Contributors
 
       -  Sergio Teruel
       -  Carlos Roca
+      -  Pilar Vargas
 
 -  Studio73 <studio73.es>:
 
