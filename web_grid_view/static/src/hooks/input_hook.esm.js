@@ -38,18 +38,30 @@ export function useInputHook(params) {
         isDirty = true;
     };
 
+    // Those keys unmount the input, firing a blur right after: without this
+    // flag that blur would close the cell Tab has just opened.
+    let leaving = false;
     const onKeydown = (ev) => {
         if (ev.key === "Enter" || ev.key === "Tab") {
             ev.preventDefault();
             ev.stopPropagation();
+            leaving = true;
             commit();
             if (params.onNavigate) {
                 params.onNavigate(ev.key, ev.shiftKey);
             }
         } else if (ev.key === "Escape") {
             ev.preventDefault();
+            leaving = true;
             discard();
         }
+    };
+    const onBlur = () => {
+        if (leaving) {
+            return;
+        }
+        commit();
+        onDiscard();
     };
 
     // The input is mounted lazily, when the cell enters edit mode: focus it as
@@ -65,5 +77,5 @@ export function useInputHook(params) {
         () => [inputRef.el]
     );
 
-    return {inputRef, onInput, onKeydown, commit, discard};
+    return {inputRef, onInput, onKeydown, onBlur, commit, discard};
 }

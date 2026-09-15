@@ -43,6 +43,9 @@
         "web.assets_unit_tests": [
             "web_grid_view/static/tests/grid_view.test.js",
         ],
+        "web.assets_tests": [
+            "web_grid_view/static/tests/tours/*.esm.js",
+        ],
     },
     "installable": True,
     "application": False,

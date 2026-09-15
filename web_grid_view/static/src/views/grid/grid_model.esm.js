@@ -35,12 +35,22 @@ export class GridModel extends Model {
         const ranges = archInfo?.ranges || [];
         if (ranges.length) {
             this.ranges = ranges;
-            const savedRangeName = this._getSavedScale();
+            const rangeName = params.rangeName || this._getSavedScale();
             this.activeRange =
-                ranges.find((r) => r.name === savedRangeName) ||
+                ranges.find((r) => r.name === rangeName) ||
                 ranges.find((r) => r.isDefault) ||
                 ranges[0];
         }
+        if (params.anchor) {
+            this.anchor = DateTime.fromISO(params.anchor);
+        }
+    }
+
+    get exportedState() {
+        return {
+            anchor: this.anchor.toISODate(),
+            rangeName: this.activeRange?.name,
+        };
     }
 
     async load(searchParams) {
@@ -267,8 +277,8 @@ export class GridModel extends Model {
                     partLabel = rfVal[1];
                     partValue = rfVal[0];
                 } else {
-                    partKey = String(rfVal ?? "");
-                    partLabel = String(rfVal ?? "");
+                    partKey = rfVal || rfVal === 0 ? String(rfVal) : "";
+                    partLabel = partKey;
                 }
                 rowParts.push({
                     name: rfName,
@@ -283,7 +293,10 @@ export class GridModel extends Model {
             const labelParts = rowParts.filter(
                 (p) => !this.hasSections || p.name !== this.sectionFieldName
             );
-            const rowLabel = labelParts.map((p) => p.label).join(" · ");
+            const rowLabel = labelParts
+                .map((p) => p.label)
+                .filter(Boolean)
+                .join(" · ");
 
             let section = null;
             if (this.hasSections) {
@@ -403,7 +416,7 @@ export class GridModel extends Model {
     }
 
     get _userTz() {
-        return this._searchParams?.context?.tz;
+        return this._searchParams?.context?.tz || "local";
     }
 
     async updateCell(rowId, columnId, value) {
@@ -436,15 +449,13 @@ export class GridModel extends Model {
         return result;
     }
 
+    get allRows() {
+        return this.hasSections
+            ? this.sections.flatMap((section) => section.rows)
+            : this.rows;
+    }
+
     _findRow(rowId) {
-        if (this.hasSections) {
-            for (const section of this.sections) {
-                const row = section.rows.find((r) => r.id === rowId);
-                if (row) return row;
-            }
-        } else {
-            return this.rows.find((r) => r.id === rowId);
-        }
-        return null;
+        return this.allRows.find((row) => row.id === rowId) || null;
     }
 }

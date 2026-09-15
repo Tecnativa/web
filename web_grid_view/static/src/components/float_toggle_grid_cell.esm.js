@@ -9,6 +9,7 @@ export class FloatToggleGridCell extends Component {
         row: {type: Object, optional: true},
         isEditing: {type: Boolean, optional: true},
         onCommit: {type: Function, optional: true},
+        onDiscard: {type: Function, optional: true},
         onNavigate: {type: Function, optional: true},
     };
 

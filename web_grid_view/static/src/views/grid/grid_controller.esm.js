@@ -1,5 +1,7 @@
 import {CogMenu} from "@web/search/cog_menu/cog_menu";
 import {Component} from "@odoo/owl";
+import {FormViewDialog} from "@web/views/view_dialogs/form_view_dialog";
+import {_t} from "@web/core/l10n/translation";
 import {GridRenderer} from "./grid_renderer.esm";
 import {Layout} from "@web/search/layout";
 import {SearchBar} from "@web/search/search_bar/search_bar";
@@ -7,6 +9,8 @@ import {ViewScaleSelector} from "@web/views/view_components/view_scale_selector"
 import {standardViewProps} from "@web/views/standard_view_props";
 import {useModelWithSampleData} from "@web/model/model";
 import {useSearchBarToggler} from "@web/search/search_bar/search_bar_toggler";
+import {useSetupAction} from "@web/search/action_hook";
+import {useService} from "@web/core/utils/hooks";
 
 export class GridController extends Component {
     static template = "web_grid_view.GridController";
@@ -20,8 +24,18 @@ export class GridController extends Component {
     };
 
     setup() {
-        this.model = useModelWithSampleData(this.props.Model, this.props.modelParams);
+        this.model = useModelWithSampleData(this.props.Model, this.modelParams);
+        useSetupAction({getLocalState: () => this.model.exportedState});
         this.searchBarToggler = useSearchBarToggler();
+        this.dialogService = useService("dialog");
+    }
+
+    get modelParams() {
+        return {...this.props.modelParams, ...this.props.state};
+    }
+
+    get canCreate() {
+        return this.model.archInfo?.activeActions?.create !== false;
     }
 
     get ranges() {
@@ -85,5 +99,16 @@ export class GridController extends Component {
 
     onCellCommit(rowId, colId, value) {
         return this.model.updateCell(rowId, colId, value);
+    }
+
+    onAddLine() {
+        const formView = this.env.config.views?.find((view) => view[1] === "form");
+        this.dialogService.add(FormViewDialog, {
+            resModel: this.model.resModel,
+            viewId: formView?.[0],
+            context: this.props.context,
+            title: _t("Add a Line"),
+            onRecordSaved: () => this.model.load(this.model._searchParams),
+        });
     }
 }

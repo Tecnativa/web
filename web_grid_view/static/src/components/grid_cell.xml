@@ -8,7 +8,7 @@
                 class="o_grid_cell_input form-control form-control-sm text-center"
                 t-on-input="input.onInput"
                 t-on-keydown="input.onKeydown"
-                t-on-blur="input.commit"
+                t-on-blur="input.onBlur"
                 t-on-click.stop=""
             />
         </t>

@@ -8,7 +8,7 @@ test("the grid view type is registered", () => {
 });
 
 test("cell widgets are registered", () => {
-    const components = registry.category("grid_components");
+    const components = registry.category("grid_view_components");
     expect(components.contains("float")).toBe(true);
     expect(components.contains("integer")).toBe(true);
     expect(components.contains("float_time")).toBe(true);
@@ -16,7 +16,7 @@ test("cell widgets are registered", () => {
 });
 
 test("row label widgets are registered", () => {
-    const components = registry.category("grid_row_components");
+    const components = registry.category("grid_view_row_components");
     expect(components.contains("many2one")).toBe(true);
     expect(components.contains("selection")).toBe(true);
     expect(components.contains("char")).toBe(true);

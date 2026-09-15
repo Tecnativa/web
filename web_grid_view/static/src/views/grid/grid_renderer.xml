@@ -13,17 +13,6 @@
                     </div>
                 </div>
             </t>
-            <t t-elif="!hasData">
-                <div
-                    class="d-flex align-items-center justify-content-center"
-                    style="min-height: 300px;"
-                >
-                    <div class="text-center text-muted">
-                        <i class="fa fa-inbox fa-3x mb-3 opacity-50" />
-                        <p class="mb-0">No data for this period.</p>
-                    </div>
-                </div>
-            </t>
             <t t-else="">
                 <div
                     class="o_grid_grid d-grid gap-0 border-bottom"
@@ -35,7 +24,7 @@
                     />
                     <t t-foreach="visibleColumns" t-as="col" t-key="col.id">
                         <div
-                            class="o_grid_column_title o_grid_sticky_top position-relative d-flex align-items-center justify-content-center px-2 py-2 border-bottom text-bg-100"
+                            class="o_grid_column_title o_grid_sticky_top d-flex align-items-center justify-content-center px-2 py-2 border-bottom text-bg-100"
                             t-att-class="col.isToday ? 'fw-bolder' : 'fw-bold'"
                             t-att-data-col-id="col.id"
                         >
@@ -62,7 +51,7 @@
                         <t t-foreach="model.sections" t-as="section" t-key="section.id">
                             <!-- Section header -->
                             <div
-                                class="o_grid_section_title o_grid_sticky_left d-flex align-items-center px-3 py-2 border-top bg-200 fw-bold position-relative"
+                                class="o_grid_section_title o_grid_sticky_left d-flex align-items-center px-3 py-2 border-top bg-200 fw-bold"
                             >
                                 <span class="z-1 text-truncate" t-esc="section.label" />
                             </div>
@@ -95,16 +84,18 @@
                             <!-- Rows in section -->
                             <t t-foreach="section.rows" t-as="row" t-key="row.id">
                                 <div
-                                    class="o_grid_row_title o_grid_sticky_left d-flex align-items-center ps-3 pe-2 py-1 position-relative"
+                                    class="o_grid_row_title o_grid_sticky_left d-flex align-items-center ps-3 pe-2 py-1"
                                     t-att-data-row-id="row.id"
-                                    t-att-class="row_index % 2 === 0 ? 'bg-view' : 'bg-100'"
+                                    t-att-class="(state.hoveredRow === row.id ? 'o_grid_cell_highlighted ' : '') + (row_index % 2 === 0 ? 'bg-view' : 'bg-100')"
+                                    t-on-mouseover="() => this.onRowMouseOver(row.id)"
+                                    t-on-mouseout="() => this.onCellMouseOut()"
                                 >
                                     <span class="z-1 text-truncate" t-esc="row.label" />
                                 </div>
                                 <t t-foreach="visibleColumns" t-as="col" t-key="col.id">
                                     <div
                                         class="o_grid_cell d-flex align-items-center justify-content-center position-relative"
-                                        t-att-class="(isHovered(row.id, col.id) ? 'o_grid_cell_highlighted' : '') + (row_index % 2 === 0 ? ' bg-view' : ' bg-100') + (col.isWeekend ? ' bg-opacity-50' : '')"
+                                        t-att-class="getCellClass(row, col, row_index)"
                                         t-att-data-row-id="row.id"
                                         t-att-data-col-id="col.id"
                                         t-on-mouseover="() => this.onCellMouseOver(row.id, col.id)"
@@ -116,25 +107,16 @@
                                                 class="position-absolute top-0 start-0 w-100 h-100 bg-info bg-opacity-25"
                                             />
                                         </t>
-                                        <t t-if="isEditing(row.id, col.id)">
-                                            <input
-                                                type="text"
-                                                class="o_grid_cell_input form-control form-control-sm"
-                                                t-att-value="getCell(row, col.id)?.value or ''"
-                                            />
-                                        </t>
-                                        <t t-elif="getCell(row, col.id)">
-                                            <span
-                                                class="o_grid_cell_value z-1"
-                                                t-att-class="getCellColorClass(getCell(row, col.id).value)"
-                                                t-esc="formatValue(getCell(row, col.id).value)"
-                                            />
-                                        </t>
-                                        <t t-else="">
-                                            <span
-                                                class="o_grid_cell_empty text-muted"
-                                            >·</span>
-                                        </t>
+                                        <GridComponent
+                                            type="getFieldType()"
+                                            widget="getWidget()"
+                                            cell="getCell(row, col.id)"
+                                            row="row"
+                                            isEditing="isEditing(row.id, col.id)"
+                                            onCommit.bind="onCellCommit"
+                                            onDiscard.bind="onCellDiscard"
+                                            onNavigate.bind="onCellNavigate"
+                                        />
                                         <!-- Magnifier glass -->
                                         <a
                                             class="o_grid_magnifier position-absolute top-0 end-0 p-1"
@@ -147,7 +129,9 @@
                                 </t>
                                 <div
                                     class="o_grid_total_cell o_grid_sticky_right d-flex align-items-center justify-content-center py-1"
-                                    t-att-class="(row_index % 2 === 0 ? 'bg-view' : 'bg-100') + (state.hoveredRow === row.id ? ' bg-100' : '')"
+                                    t-att-class="(row_index % 2 === 0 ? 'bg-view' : 'bg-100') + (state.hoveredRow === row.id ? ' o_grid_cell_highlighted' : '')"
+                                    t-on-mouseover="() => this.onRowMouseOver(row.id)"
+                                    t-on-mouseout="() => this.onCellMouseOut()"
                                 >
                                     <span
                                         class="fw-bold"
@@ -156,25 +140,6 @@
                                     />
                                 </div>
                             </t>
-
-                            <!-- Add a line -->
-                            <div
-                                class="o_grid_row_title o_grid_sticky_left d-flex align-items-center ps-3 py-1"
-                                t-att-class="row_index % 2 === 0 ? 'bg-view' : 'bg-100'"
-                            >
-                                <a
-                                    class="btn btn-link btn-sm text-muted p-0"
-                                    t-on-click="() => this.onCreateLine(section)"
-                                >
-                                    <i class="fa fa-plus-circle me-1" />Add a line
-                                </a>
-                            </div>
-                            <t t-foreach="visibleColumns" t-as="col" t-key="col.id">
-                                <div
-                                    t-att-class="'bg-view bg-opacity-50' + (row_index % 2 === 0 ? '' : ' bg-100')"
-                                />
-                            </t>
-                            <div class="bg-view bg-opacity-50" />
                         </t>
                     </t>
 
@@ -182,16 +147,18 @@
                     <t t-else="">
                         <t t-foreach="model.rows" t-as="row" t-key="row.id">
                             <div
-                                class="o_grid_row_title o_grid_sticky_left d-flex align-items-center ps-3 pe-2 py-1 position-relative"
+                                class="o_grid_row_title o_grid_sticky_left d-flex align-items-center ps-3 pe-2 py-1"
                                 t-att-data-row-id="row.id"
-                                t-att-class="row_index % 2 === 0 ? 'bg-view' : 'bg-100'"
+                                t-att-class="(state.hoveredRow === row.id ? 'o_grid_cell_highlighted ' : '') + (row_index % 2 === 0 ? 'bg-view' : 'bg-100')"
+                                t-on-mouseover="() => this.onRowMouseOver(row.id)"
+                                t-on-mouseout="() => this.onCellMouseOut()"
                             >
                                 <span class="z-1 text-truncate" t-esc="row.label" />
                             </div>
                             <t t-foreach="visibleColumns" t-as="col" t-key="col.id">
                                 <div
                                     class="o_grid_cell d-flex align-items-center justify-content-center position-relative"
-                                    t-att-class="(isHovered(row.id, col.id) ? 'o_grid_cell_highlighted' : '') + (row_index % 2 === 0 ? ' bg-view' : ' bg-100') + (col.isWeekend ? ' bg-opacity-50' : '')"
+                                    t-att-class="getCellClass(row, col, row_index)"
                                     t-att-data-row-id="row.id"
                                     t-att-data-col-id="col.id"
                                     t-on-mouseover="() => this.onCellMouseOver(row.id, col.id)"
@@ -203,25 +170,16 @@
                                             class="position-absolute top-0 start-0 w-100 h-100 bg-info bg-opacity-25"
                                         />
                                     </t>
-                                    <t t-if="isEditing(row.id, col.id)">
-                                        <input
-                                            type="text"
-                                            class="o_grid_cell_input form-control form-control-sm"
-                                            t-att-value="getCell(row, col.id)?.value or ''"
-                                        />
-                                    </t>
-                                    <t t-elif="getCell(row, col.id)">
-                                        <span
-                                            class="o_grid_cell_value z-1"
-                                            t-att-class="getCellColorClass(getCell(row, col.id).value)"
-                                            t-esc="formatValue(getCell(row, col.id).value)"
-                                        />
-                                    </t>
-                                    <t t-else="">
-                                        <span
-                                            class="o_grid_cell_empty text-muted"
-                                        >·</span>
-                                    </t>
+                                    <GridComponent
+                                        type="getFieldType()"
+                                        widget="getWidget()"
+                                        cell="getCell(row, col.id)"
+                                        row="row"
+                                        isEditing="isEditing(row.id, col.id)"
+                                        onCommit.bind="onCellCommit"
+                                        onDiscard.bind="onCellDiscard"
+                                        onNavigate.bind="onCellNavigate"
+                                    />
                                     <a
                                         class="o_grid_magnifier position-absolute top-0 end-0 p-1"
                                         t-on-click.prevent="() => this.openRecords(row.id, col.id)"
@@ -233,7 +191,9 @@
                             </t>
                             <div
                                 class="o_grid_total_cell o_grid_sticky_right d-flex align-items-center justify-content-center py-1"
-                                t-att-class="(row_index % 2 === 0 ? 'bg-view' : 'bg-100')"
+                                t-att-class="(row_index % 2 === 0 ? 'bg-view' : 'bg-100') + (state.hoveredRow === row.id ? ' o_grid_cell_highlighted' : '')"
+                                t-on-mouseover="() => this.onRowMouseOver(row.id)"
+                                t-on-mouseout="() => this.onCellMouseOut()"
                             >
                                 <span
                                     class="fw-bold"
@@ -242,6 +202,15 @@
                                 />
                             </div>
                         </t>
+                    </t>
+
+                    <t t-if="!hasData">
+                        <div
+                            class="o_grid_no_data text-center text-muted py-4"
+                            style="grid-column: 1 / -1;"
+                        >
+                            No data for this period.
+                        </div>
                     </t>
 
                     <!-- Footer: column totals -->
@@ -253,7 +222,9 @@
                     <t t-foreach="visibleColumns" t-as="col" t-key="col.id">
                         <div
                             class="o_grid_total_cell o_grid_sticky_bottom d-flex align-items-center justify-content-center border-top bg-100"
-                            t-att-class="state.hoveredCol === col.id ? 'bg-200' : ''"
+                            t-att-class="state.hoveredCol === col.id ? 'o_grid_cell_highlighted' : ''"
+                            t-on-mouseover="() => this.onColumnMouseOver(col.id)"
+                            t-on-mouseout="() => this.onCellMouseOut()"
                         >
                             <span
                                 class="fs-6 fw-bolder"

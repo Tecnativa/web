@@ -1,6 +1,10 @@
 import {Component, onMounted, useRef, useState} from "@odoo/owl";
 import {useService} from "@web/core/utils/hooks";
-import {FormViewDialog} from "@web/views/view_dialogs/form_view_dialog";
+import {
+    formatFloat,
+    formatFloatTime,
+    formatInteger,
+} from "@web/views/fields/formatters";
 import {GridComponent} from "../../components/grid_component.esm";
 import {GridRow} from "../../components/grid_row.esm";
 import {registry} from "@web/core/registry";
@@ -24,7 +28,6 @@ export class GridRenderer extends Component {
             editingCol: null,
         });
         this.actionService = useService("action");
-        this.dialogService = useService("dialog");
         this.gridRef = useRef("grid");
         onMounted(() => this._focusOnToday());
     }
@@ -39,14 +42,10 @@ export class GridRenderer extends Component {
         return cols.filter((c) => !c.isWeekend || this.model.showWeekends);
     }
 
-    get allRows() {
-        return this.model.hasSections ? this.model.sections : this.model.rows;
-    }
-
     get gridTemplateColumns() {
         const n = this.visibleColumns.length;
-        const colWidth = n > 7 ? "minmax(8ch, auto)" : "minmax(10ch, 1fr)";
-        return `auto repeat(${n}, ${colWidth}) minmax(10ch, 10em)`;
+        const colWidth = n > 7 ? "minmax(6ch, 1fr)" : "minmax(10ch, 1fr)";
+        return `minmax(10ch, 250px) repeat(${n}, ${colWidth}) minmax(8ch, 12ch)`;
     }
 
     get grandTotal() {
@@ -58,9 +57,7 @@ export class GridRenderer extends Component {
     }
 
     openRecords(rowId, colId) {
-        const row = this.model.hasSections
-            ? this._findRowInSection(rowId)
-            : this.model.rows.find((r) => r.id === rowId);
+        const row = this.model.allRows.find((r) => r.id === rowId);
         if (!row || !row.cells[colId]) return;
         const cell = row.cells[colId];
         this.actionService.doAction({
@@ -78,35 +75,6 @@ export class GridRenderer extends Component {
         });
     }
 
-    _findRowInSection(rowId) {
-        for (const section of this.model.sections) {
-            const row = section.rows.find((r) => r.id === rowId);
-            if (row) return row;
-        }
-        return null;
-    }
-
-    onCreateLine(section) {
-        const ctx = {default_date: this.model.periodStart.toISODate()};
-        if (section) ctx.default_category = section.label;
-        this.dialogService.add(FormViewDialog, {
-            resModel: this.model.resModel,
-            context: ctx,
-            title: "Add a Line",
-            onRecordSaved: async () => {
-                await this.model.load(this.model._searchParams);
-            },
-        });
-    }
-
-    getCellColorClass(value) {
-        if (value === undefined || value === null) return "";
-        const num = Number(value);
-        if (num >= 6) return "text-success fw-medium";
-        if (num > 0 && num < 3) return "text-warning";
-        return "";
-    }
-
     isNegative(value) {
         return value !== undefined && value !== null && Number(value) < 0;
     }
@@ -115,7 +83,13 @@ export class GridRenderer extends Component {
         if (value === undefined || value === null) {
             return "";
         }
-        return Number(value).toFixed(1);
+        if (this.getWidget() === "float_time") {
+            return formatFloatTime(value);
+        }
+        if (this.getFieldType() === "integer") {
+            return formatInteger(value);
+        }
+        return formatFloat(value);
     }
 
     getBarHeight(col) {
@@ -142,6 +116,16 @@ export class GridRenderer extends Component {
         this.state.hoveredCol = colId;
     }
 
+    onRowMouseOver(rowId) {
+        this.state.hoveredRow = rowId;
+        this.state.hoveredCol = null;
+    }
+
+    onColumnMouseOver(colId) {
+        this.state.hoveredRow = null;
+        this.state.hoveredCol = colId;
+    }
+
     onCellMouseOut() {
         this.state.hoveredRow = null;
         this.state.hoveredCol = null;
@@ -161,11 +145,14 @@ export class GridRenderer extends Component {
     async onCellCommit(value) {
         const rowId = this.state.editingRow;
         const colId = this.state.editingCol;
-        this.state.editingRow = null;
-        this.state.editingCol = null;
         if (rowId !== null && colId !== null) {
             await this.props.onCellCommit?.(rowId, colId, value);
         }
+    }
+
+    onCellDiscard() {
+        this.state.editingRow = null;
+        this.state.editingCol = null;
     }
 
     onCellNavigate(key, shift) {
@@ -174,17 +161,40 @@ export class GridRenderer extends Component {
         if (rowId === null || colId === null) {
             return;
         }
-        const cols = this.visibleColumns;
-        const colIdx = cols.findIndex((c) => c.id === colId);
-        let nextIdx = colIdx;
-        if (key === "Tab") {
-            nextIdx = shift
-                ? Math.max(colIdx - 1, 0)
-                : Math.min(colIdx + 1, cols.length - 1);
+        if (key !== "Tab") {
+            this.onCellDiscard();
+            return;
         }
-        this.state.editingRow = rowId;
-        this.state.editingCol = cols[nextIdx].id;
-        this.props.onCellNavigate?.(rowId, cols[nextIdx].id);
+        const rows = this.model.allRows;
+        const cols = this.visibleColumns;
+        const rowIdx = rows.findIndex((r) => r.id === rowId);
+        const colIdx = cols.findIndex((c) => c.id === colId);
+        if (rowIdx === -1 || colIdx === -1) {
+            return;
+        }
+        const linearIdx = rowIdx * cols.length + colIdx;
+        const lastLinearIdx = rows.length * cols.length - 1;
+        const nextLinearIdx = Math.min(
+            Math.max(linearIdx + (shift ? -1 : 1), 0),
+            lastLinearIdx
+        );
+        const nextRow = rows[Math.floor(nextLinearIdx / cols.length)];
+        const nextCol = cols[nextLinearIdx % cols.length];
+        this.state.editingRow = nextRow.id;
+        this.state.editingCol = nextCol.id;
+        this.props.onCellNavigate?.(nextRow.id, nextCol.id);
+    }
+
+    getCellClass(row, col, rowIndex) {
+        return [
+            this.isHovered(row.id, col.id) ? "o_grid_cell_highlighted" : "",
+            rowIndex % 2 === 0 ? "bg-view" : "bg-100",
+            col.isWeekend ? "bg-opacity-50" : "",
+            this.model.archInfo?.editable ? "o_grid_cell_editable" : "",
+            this.getCell(row, col.id)?.value ? "" : "o_grid_cell_empty",
+        ]
+            .filter(Boolean)
+            .join(" ");
     }
 
     isHovered(rowId, colId) {
