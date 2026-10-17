@@ -1,10 +1,11 @@
-import {Component} from "@odoo/owl";
+import {Component, t, useProps} from "@odoo/owl";
 
 export class FilterButton extends Component {
     static template = "filter_button.FilterButton";
-    static props = {
-        filters: {type: Object, optional: false},
-    };
+    props = useProps({
+        filters: t.array(),
+    });
+
     setup() {
         this.model = this.env.searchModel;
     }
@@ -26,7 +27,7 @@ export class FilterButton extends Component {
                 color: "info",
             },
         };
-        return mapping[filter.type];
+        return mapping[filter.type] || {};
     }
     /**
      * Clear filters

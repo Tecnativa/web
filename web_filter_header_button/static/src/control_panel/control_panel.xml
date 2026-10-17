@@ -4,31 +4,30 @@
         <xpath expr="//div[hasclass('o_control_panel_main')]" position="after">
             <t t-if="this.env.config.viewType and this.env.config.viewType !== 'form'">
                 <Transition
-                    visible="state.showButtonFilters"
+                    visible="this.headerButtonsState.showButtonFilters and this.headerButtonFilters.length > 0"
                     name="'o-fade'"
                     t-slot-scope="transition"
                     leaveDuration="500"
                 >
                     <div
-                        class="o_embedded_actions overflow-hidden d-flex flex-wrap w-100 align-items-center justify-content-center gap-2"
+                        class="o_header_button_filters overflow-hidden d-flex flex-wrap w-100 align-items-center justify-content-center gap-2"
                         t-att-class="transition.className"
                     >
-                        <FilterButton
-                            filters="this.env.searchModel.headerButtonFilters"
-                        />
+                        <FilterButton filters="this.headerButtonFilters" />
                     </div>
                 </Transition>
             </t>
         </xpath>
-
-        <xpath expr="//button[@t-on-click='onClickShowEmbedded']" position="after">
+        <xpath expr="//button[@name='embedded_actions']" position="after">
             <button
-                t-if="state.headerButtonFilters?.length"
+                t-if="this.headerButtonFilters.length"
                 class="btn btn-secondary"
-                t-att-class="{active: state.showButtonFilters}"
-                t-on-click="onClickShowshowButtonFilters"
+                t-att-class="{active: this.headerButtonsState.showButtonFilters}"
+                name="header_button_filters"
+                t-on-click="() => this.onClickShowButtonFilters()"
+                title="Filter buttons"
             >
-                <i class="fa fa-filter" />
+                <i class="oi oi-filled" data-icon="filter_alt" />
             </button>
         </xpath>
     </t>

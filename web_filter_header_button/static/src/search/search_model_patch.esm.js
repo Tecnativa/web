@@ -1,22 +1,16 @@
 import {makeContext} from "@web/core/context";
 import {patch} from "@web/core/utils/patch";
 import {SearchModel} from "@web/search/search_model";
-import {useEffect} from "@odoo/owl";
 
 patch(SearchModel.prototype, {
-    setup() {
-        super.setup(...arguments);
-        // Filter flagged filters to be shown in the control panel.
-        useEffect(
-            () => {
-                this.headerButtonFilters = this.getHeaderButtonFilters();
-            },
-            () => [this.searchItems]
-        );
-    },
-    async load() {
-        await super.load(...arguments);
-        this.headerButtonFilters = this.getHeaderButtonFilters();
+    /**
+     * Filters flagged to be shown as buttons in the control panel, with their
+     * current state
+     *
+     * @returns {Array}
+     */
+    get headerButtonFilters() {
+        return this.getHeaderButtonFilters();
     },
     /**
      * Filter flagged filters to be shown in the control panel.
@@ -50,13 +44,5 @@ patch(SearchModel.prototype, {
             delete preFavorite.context.shown_in_panel;
         }
         return {preFavorite, irFilter};
-    },
-    /**
-     * Update the header filters buttons state
-     * @override
-     */
-    async _reloadSections() {
-        await super._reloadSections();
-        this.headerButtonFilters = this.getHeaderButtonFilters();
     },
 });

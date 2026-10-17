@@ -7,14 +7,14 @@
                 <button
                     t-if="filters and filters.length"
                     t-attf-class="btn btn-outline-primary"
-                    t-on-click.stop="this.onClickReset"
+                    t-on-click.stop="() => this.onClickReset()"
                 >
-                    <i class="fa fa-times" />
+                    <i class="oi" data-icon="close" />
                 </button>
                 <!-- Directly get the model filters so we can react to changes -->
                 <t t-foreach="filters" t-as="filter" t-key="filter.id">
                     <t t-set="options" t-value="filter.context.shown_in_panel" />
-                    <t t-set="filter_mapping" t-value="mapFilterType(filter)" />
+                    <t t-set="filter_mapping" t-value="this.mapFilterType(filter)" />
                     <t t-set="color" t-value="filter_mapping.color || 'primary'" />
                     <!-- We can set an empty string on the optional name to show only the icon -->
                     <t
@@ -28,9 +28,11 @@
                     >
                         <i
                             t-if="options.icon"
-                            t-attf-class="fa {{options.icon}} {{name !== '' ? 'me-1' : ''}}"
+                            class="oi"
+                            t-att-class="{'me-1': name !== ''}"
+                            t-att-data-icon="options.icon"
                         />
-                        <t t-esc="name" />
+                        <t t-out="name" />
                     </button>
                 </t>
             </div>
