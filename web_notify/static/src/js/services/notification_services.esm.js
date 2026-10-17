@@ -1,6 +1,6 @@
+import {_t} from "@web/core/l10n/translation";
 import {markup} from "@odoo/owl";
 import {registry} from "@web/core/registry";
-import {_t} from "@web/core/l10n/translation";
 
 export const webNotificationService = {
     dependencies: ["bus_service", "notification", "action"],
@@ -27,7 +27,8 @@ export const webNotificationService = {
                 notification.html ? markup(notification.message) : notification.message,
                 {
                     title: notification.title,
-                    type: notification.type,
+                    // The notifications of 20.0 have no neutral type
+                    type: notification.type === "default" ? "info" : notification.type,
                     sticky: notification.sticky,
                     className: notification.className,
                     buttons: buttons.map((button) => {

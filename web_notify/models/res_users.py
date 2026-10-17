@@ -21,19 +21,19 @@ class ResUsers(models.Model):
     def _compute_channel_names(self):
         for record in self:
             record.notify_success_channel_name = json_dump(
-                channel_with_db(self.env.cr.dbname, record.partner_id)
+                channel_with_db(self.env.cr.dbname, record)
             )
             record.notify_danger_channel_name = json_dump(
-                channel_with_db(self.env.cr.dbname, record.partner_id)
+                channel_with_db(self.env.cr.dbname, record)
             )
             record.notify_warning_channel_name = json_dump(
-                channel_with_db(self.env.cr.dbname, record.partner_id)
+                channel_with_db(self.env.cr.dbname, record)
             )
             record.notify_info_channel_name = json_dump(
-                channel_with_db(self.env.cr.dbname, record.partner_id)
+                channel_with_db(self.env.cr.dbname, record)
             )
             record.notify_default_channel_name = json_dump(
-                channel_with_db(self.env.cr.dbname, record.partner_id)
+                channel_with_db(self.env.cr.dbname, record)
             )
 
     notify_success_channel_name = fields.Char(compute="_compute_channel_names")
@@ -132,8 +132,9 @@ class ResUsers(models.Model):
             raise exceptions.UserError(
                 self.env._("Sending a notification to another user is forbidden.")
             )
+        # Partners send their bus notifications to their users in 20.0
         if not target:
-            target = self.partner_id
+            target = self
         if action:
             action = clean_action(action, self.env)
         bus_message = {
@@ -145,8 +146,8 @@ class ResUsers(models.Model):
             "action": action,
             "params": dict(params or []),
         }
-        for partner in target:
-            partner._bus_send(
+        for record in target:
+            record._bus_send(
                 "web_notify",
                 bus_message,
             )
