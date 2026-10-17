@@ -13,7 +13,9 @@ class DecontracStartScreenAction(models.Model):
     sequence = fields.Integer()
     name = fields.Char(required=True, translate=True)
     image = fields.Image("Start screen icon", max_width=128, max_height=128, store=True)
-    icon_name = fields.Char(help="Just set the Font Awesome icon name. e.g.: fa-truck")
+    icon_name = fields.Char(
+        help="Name of the Material Symbols icon, e.g.: local_shipping"
+    )
     color = fields.Integer(help="Choose the icon color")
     description = fields.Html(translate=True)
     action_ref_id = fields.Reference(

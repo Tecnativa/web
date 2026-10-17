@@ -66,11 +66,11 @@ class TestQuickStartScreenVisibility(WebQuickStartScreenCommon):
     def test_visible_action_ids_no_model_access(self):
         """Actions whose model has no read access should be excluded"""
         # Clear ormcache so the body executes fresh under the mock
-        self.env.registry.clear_cache()
-        # Patch ir.model.access.check to deny access
+        self.env.transaction.invalidate_ormcache()
+        # Deny the read access to the model of the first action
         with patch.object(
-            type(self.env["ir.model.access"]),
-            "check",
+            type(self.env["res.partner"]),
+            "has_access",
             return_value=False,
         ):
             visible = self.start_screen_1._visible_action_ids()
